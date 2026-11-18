@@ -642,15 +642,37 @@ a.stat-strip-item:hover { background: rgba(37, 99, 235, 0.05); color: inherit; }
 }
 
 /* ------------------------------------------------------------- Form */
+/* Catatan: padding sengaja dipisah per jenis. `.form-select` butuh ruang
+   kanan untuk panah chevron bawaan Bootstrap (16 px pada right .75rem);
+   bila disatukan dengan .form-control (0.85rem), teks menimpa ikon panah. */
 .form-control,
 .form-select {
     border-color: #e2e8f0;
     border-radius: var(--radius-sm);
-    padding: 0.47rem 0.85rem;
     font-size: 0.9rem;
     background-color: #fff;
     transition: border-color var(--transition), box-shadow var(--transition);
 }
+
+.form-control { padding: 0.47rem 0.85rem; }
+
+.form-select { padding: 0.47rem 2.3rem 0.47rem 0.85rem; }
+.form-select.form-select-sm { padding: 0.32rem 2.15rem 0.32rem 0.7rem; }
+.form-select.form-select-lg { padding: 0.62rem 2.6rem 0.62rem 1rem; }
+
+/* Status valid/invalid — ikon centang/silang bawaan Bootstrap di sisi kanan
+   harus punya ruang sendiri agar tidak menimpa teks. */
+.form-control.is-valid,
+.form-control.is-invalid { padding-right: calc(1.5em + 0.9rem); }
+.form-select.is-valid,
+.form-select.is-invalid { padding-right: 2.3rem; }
+
+/* Tanggal & jam — ikon kalender/pemilih bawaan browser di sisi kanan. */
+.form-control[type="date"],
+.form-control[type="time"],
+.form-control[type="datetime-local"],
+.form-control[type="month"],
+.form-control[type="week"] { padding-right: 2.4rem; }
 
 .form-control:focus,
 .form-select:focus {
@@ -759,7 +781,7 @@ textarea.form-control { padding: 0.6rem 0.85rem; line-height: 1.55; }
     font-size: 0.89rem;
     box-shadow: var(--shadow-sm);
 }
-.alert-dismissible { padding-right: 2.75rem; }
+.alert-dismissible { padding-right: 3rem; }
 
 /* -------------------------------------------------------- Progress bar */
 .progress { height: 0.6rem; border-radius: 999px; background: #eef2f7; }
