@@ -1,0 +1,25 @@
+# ===== Skripsi — TIDAK ikut repo ini (repo khusus sistem) =====
+/skripsi/
+
+# ===== Unggahan runtime (dokumen pengguna) =====
+/public/uploads/*
+!/public/uploads/.htaccess
+!/public/uploads/dokumen/
+/public/uploads/dokumen/*
+!/public/uploads/dokumen/.gitkeep
+
+# ===== Log & artefak runtime =====
+*.log
+/logs/
+/sessions/
+
+# ===== Artefak suite uji (cookie jar + PDF bukti; dibuat ulang saat test berjalan) =====
+/sistem/uji/**/*-test/
+
+# ===== Editor & OS =====
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
