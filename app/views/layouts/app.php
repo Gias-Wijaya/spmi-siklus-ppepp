@@ -107,6 +107,33 @@ $logo    = logo_file();
             </div>
         </div>
     </aside>
+    <script>
+        /* Pertahankan posisi gulir sidebar antar-halaman: <nav> di dalam aside
+           yang menggulir, bukan asidenya. Disimpan di sessionStorage (per-tab)
+           dan dipulihkan tepat setelah elemen terparse — sebelum paint pertama
+           agar tidak kedip ke atas lalu turun lagi. */
+        (function () {
+            var key = 'spmi.sidebar.scroll';
+            var nav = document.querySelector('#sidebar nav');
+            if (!nav) return;
+            try {
+                var pos = sessionStorage.getItem(key);
+                if (pos) nav.scrollTop = parseInt(pos, 10) || 0;
+            } catch (e) {}
+            var raf = 0;
+            nav.addEventListener('scroll', function () {
+                if (raf) return;
+                raf = requestAnimationFrame(function () {
+                    raf = 0;
+                    try { sessionStorage.setItem(key, String(nav.scrollTop)); } catch (e) {}
+                });
+            }, { passive: true });
+            /* Simpan sekali lagi saat halaman akan ditinggalkan (klik menu). */
+            window.addEventListener('pagehide', function () {
+                try { sessionStorage.setItem(key, String(nav.scrollTop)); } catch (e) {}
+            });
+        })();
+    </script>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- ================================================= Konten -->
