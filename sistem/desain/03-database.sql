@@ -184,7 +184,7 @@ CREATE TABLE `document_approvals` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
--- M2 — MONEV (6 bulan sekali)
+-- M2 — MONEV (3 bulan sekali)
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE `monev_periods` (
@@ -500,10 +500,10 @@ INSERT INTO `document_categories` (`parent_id`, `name`, `level`, `sort_order`) V
 (NULL, 'Formulir',         1, 6),
 (NULL, 'Laporan Mutu',     1, 7);
 
--- Periode Monev (6 bulan sekali)
+-- Periode Monev (3 bulan sekali; nama 3 & 4 dipakai test case, jadi seed hanya 1 & 2)
 INSERT INTO `monev_periods` (`name`, `start_date`, `end_date`, `status`) VALUES
-('Monev 2026-1', '2026-01-01', '2026-06-30', 'open'),
-('Monev 2026-2', '2026-07-01', '2026-12-31', 'open');
+('Monev 2026-1', '2026-01-01', '2026-03-31', 'open'),
+('Monev 2026-2', '2026-04-01', '2026-06-30', 'open');
 
 -- Indikator Monev contoh (samakan dengan standar kampus)
 INSERT INTO `monev_indicators` (`standard_id`, `code`, `name`, `unit_of_measure`, `target`, `weight`) VALUES

@@ -238,7 +238,7 @@ $r = $admin->post('/monev/report', [
     '_token'    => $admin->token(),
     'period_id' => '1',
     'unit_id'   => '1',
-] + flat('values', ['1' => '90', '2' => '80']) + flat('notes', ['1' => 'Data dari laporan semester']), ['evidence[1]' => $bukti]);
+] + flat('values', ['1' => '90', '2' => '80']) + flat('notes', ['1' => 'Data dari laporan triwulan']), ['evidence[1]' => $bukti]);
 ok((bool)preg_match('#/monev/reports/(\d+)#', $r['url'], $m1), 'draf tersimpan → halaman detail laporan');
 $adminReport = (int)($m1[1] ?? 0);
 ok(str_contains($r['body'], 'Draf') || str_contains($r['body'], 'berhasil disimpan'), 'konfirmasi simpan draf tampil');

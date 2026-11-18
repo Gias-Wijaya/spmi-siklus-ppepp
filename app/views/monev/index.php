@@ -13,7 +13,7 @@ $filledCount = count(array_filter($reports, static fn ($r) => $r['report_id'] !=
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="text-muted small">
-        Tren capaian 6-bulanan · menampilkan periode
+        Tren capaian 3-bulanan · menampilkan periode
         <strong><?= $period ? e($period['name']) : '-' ?></strong>
     </div>
     <form method="get" action="<?= e(url('/monev')) ?>" class="d-flex gap-2">

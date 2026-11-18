@@ -17,7 +17,7 @@ $isSuper = Auth::isSuperAdmin();
             <?= format_date($period['start_date']) ?> – <?= format_date($period['end_date']) ?> ·
             Unit <strong><?= e($unit['name']) ?></strong>
         </div>
-        <div class="small text-muted">Monev diisi <strong>enam bulan sekali</strong>; nilai = capaian aktual, target mengikuti indikator.</div>
+        <div class="small text-muted">Monev diisi <strong>3 bulan sekali</strong>; nilai = capaian aktual, target mengikuti indikator.</div>
     </div>
     <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/monev')) ?>">← Dasbor Monev</a>
 </div>

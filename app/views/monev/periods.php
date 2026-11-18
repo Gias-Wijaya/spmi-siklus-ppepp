@@ -1,6 +1,6 @@
 <?php
 /**
- * M2 — Kelola periode Monev (Super Admin): buka/tutup periode enam-bulanan.
+ * M2 — Kelola periode Monev (Super Admin): buka/tutup periode 3-bulanan.
  * @var array $periods @var array $errors
  */
 $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invalid' : '';
@@ -36,7 +36,7 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Buat periode</button>
                 </form>
-                <div class="form-text">Monev diisi <strong>enam bulan sekali</strong> oleh Wakil Ketua I–IV. Periode <em>terbuka</em> menerima isian; <em>tertutup</em> mengunci seluruh isian.</div>
+                <div class="form-text">Monev diisi <strong>3 bulan sekali</strong> oleh Wakil Ketua I–IV. Periode <em>terbuka</em> menerima isian; <em>tertutup</em> mengunci seluruh isian.</div>
             </div>
         </div>
     </div>

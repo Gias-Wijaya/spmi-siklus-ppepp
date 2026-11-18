@@ -11,7 +11,7 @@
 | 5 | `documents` | Dokumen SPMI: nomor, versi, **tanggal & masa berlaku**, **status 🟢🟡🔴**, status persetujuan | `id` |
 | 6 | `document_versions` | Riwayat versi setiap dokumen | `id` |
 | 7 | `document_approvals` | Alur persetujuan berjenjang | `id` |
-| 8 | `monev_periods` | Periode Monev (**6 bulan sekali**) | `id` |
+| 8 | `monev_periods` | Periode Monev (**3 bulan sekali**) | `id` |
 | 9 | `monev_indicators` | Indikator capaian (turunan standar) untuk **M2** | `id` |
 | 10 | `monev_reports` | Laporan capaian satu unit pada satu periode | `id` |
 | 11 | `monev_values` | Nilai capaian per indikator + unggahan bukti | `id` |

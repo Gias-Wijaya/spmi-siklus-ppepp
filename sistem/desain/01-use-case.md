@@ -32,7 +32,7 @@
 | UC-14 | Cari & filter dokumen | A1, A2 | M1 | Kategori, status, masa berlaku, kata kunci |
 | UC-15 | Perbarui status masa berlaku *(aktor sistem)* | A3 | M1 | 🟢 hijau → 🟡 kuning (H-30) → 🔴 merah (kedaluwarsa) |
 | **M2 — Monev** ||||
-| UC-16 | Kelola periode & indikator Monev | A1 | M2 | Periode 6-bulanan, daftar indikator standar |
+| UC-16 | Kelola periode & indikator Monev | A1 | M2 | Periode 3-bulanan, daftar indikator standar |
 | UC-17 | Isi capaian unit | A2 | M2 | Nilai per indikator + unggah bukti |
 | UC-18 | Review & tutup periode | A1 | M2 | Rekap, tandai selesai |
 | UC-19 | Lihat tren capaian | A1, A2 | M2 | Grafik antarperiode & antarunit, status lampu |

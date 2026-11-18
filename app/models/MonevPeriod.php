@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Periode Monev — diisi enam bulan sekali (T3). */
+/** Periode Monev — diisi 3 bulan sekali (T3). */
 final class MonevPeriod extends Model
 {
     protected static string $table = 'monev_periods';

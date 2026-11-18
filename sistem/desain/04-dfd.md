@@ -22,7 +22,7 @@
         │  (1) unggah dokumen & metadata, masa berlaku
         ▼
   ┌─────────────┐  status 🟢🟡🔴   ┌─────────────┐
-  │ P1 Kelola   │ ───────────────► │ P2 Pantau   │ ◄── isi capaian 6-bulanan (Anggota)
+  │ P1 Kelola   │ ───────────────► │ P2 Pantau   │ ◄── isi capaian 3-bulanan (Anggota)
   │ Dokumen SPMI│                  │ Kinerja     │
   └──────┬──────┘                  └──────┬──────┘
          │ bukti pendukung                │ data capaian
@@ -68,7 +68,7 @@
 | F2 | Persetujuan dokumen | E1 | P1 | status approve/reject, komentar |
 | F3 | Status masa berlaku | P1 | D1 | status 🟢🟡🔴, sisa hari |
 | F4 | Dokumen berlaku | D1 | P2/P3 | dokumen acuan sebagai bukti |
-| F5 | Periode & indikator Monev | E1 | P2 | periode 6-bulanan, indikator, target |
+| F5 | Periode & indikator Monev | E1 | P2 | periode 3-bulanan, indikator, target |
 | F6 | Capaian unit | E2 | P2 | nilai per indikator + unggah bukti |
 | F7 | Rekap capaian | P2 | E1/E2 | skor total, grafik tren, status lampu |
 | F8 | Instrumen AMI | E1 | P3 | tambah/ubah/hapus indikator + alasan perubahan |

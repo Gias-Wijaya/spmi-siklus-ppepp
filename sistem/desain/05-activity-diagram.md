@@ -145,7 +145,7 @@ stop
 
 ```plantuml
 @startuml
-title Aktivitas — Pelaporan Monev 6-Bulanan
+title Aktivitas — Pelaporan Monev 3-Bulanan
 start
 :Super Admin membuka periode Monev;
 :Anggota (Waket) mengisi capaian

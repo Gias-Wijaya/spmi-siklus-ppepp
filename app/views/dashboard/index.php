@@ -159,7 +159,7 @@ $statCard = static function (string $label, int $value, string $valueCls, string
             <div class="card-header"><strong><i class="bi bi-arrow-repeat me-1 text-primary"></i>Siklus PPEPP</strong></div>
             <div class="card-body">
                 <div class="ppepp-step"><span class="step-num">1</span><span><strong>Penetapan</strong> — dokumen SPMI (M1)</span></div>
-                <div class="ppepp-step"><span class="step-num">2</span><span><strong>Pelaksanaan</strong> — Monev 6-bulanan (M2)</span></div>
+                <div class="ppepp-step"><span class="step-num">2</span><span><strong>Pelaksanaan</strong> — Monev 3-bulanan (M2)</span></div>
                 <div class="ppepp-step"><span class="step-num">3</span><span><strong>Evaluasi</strong> — AMI tahunan &amp; kepuasan (M3)</span></div>
                 <div class="ppepp-step"><span class="step-num">4</span><span><strong>Pengendalian</strong> — rencana aksi &amp; verifikasi (M4)</span></div>
                 <div class="ppepp-step"><span class="step-num">5</span><span><strong>Peningkatan</strong> — revisi dokumen → siklus berikutnya</span></div>

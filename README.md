@@ -11,7 +11,7 @@ Sistem informasi berbasis **siklus PPEPP** (Perencanaan–Pelaksanaan–Evaluasi
 | Modul | Cakupan |
 |---|---|
 | **M1 Dokumen SPMI** | unggah dokumen + masa berlaku, status 🟢🟡🔴 otomatis, versi, alur persetujuan |
-| **M2 Monev** | isian capaian enam-bulanan per unit, unggah bukti, grafik tren per periode |
+| **M2 Monev** | isian capaian 3-bulanan per unit, unggah bukti, grafik tren per periode |
 | **M3 AMI & Evaluasi** | instrumen fleksibel (jejak perubahan), penilaian auditor 0–4, rekap temuan, formulir kepuasan |
 | **M4 Pengendalian–Peningkatan** | temuan → rencana aksi (PIC, tenggat), unggah bukti, verifikasi Super Admin |
 | **M5 Pendukung** | RBAC, pengguna & unit, notifikasi tenggat (FR-15), ekspor laporan CSV/cetak (FR-14) |
