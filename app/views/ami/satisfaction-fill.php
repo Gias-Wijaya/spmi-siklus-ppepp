@@ -5,13 +5,18 @@
  */
 ?>
 
-<div class="mb-3">
-    <a class="small" href="<?= e(url('/ami/satisfaction')) ?>">← Kembali ke daftar formulir</a>
-    <h1 class="h4 mt-1"><?= e((string)$survey['name']) ?></h1>
-    <div class="text-muted small">
-        Periode: <?= $survey['start_date'] ? format_date($survey['start_date']) : '—' ?> –
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-emoji-smile me-1"></i>
+        <strong><?= e((string)$survey['name']) ?></strong>, periode
+        <?= $survey['start_date'] ? format_date($survey['start_date']) : '—' ?> –
         <?= $survey['end_date'] ? format_date($survey['end_date']) : '—' ?> ·
         jawaban bersifat <strong>satu kali per responden</strong>.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami/satisfaction')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar formulir
+        </a>
     </div>
 </div>
 

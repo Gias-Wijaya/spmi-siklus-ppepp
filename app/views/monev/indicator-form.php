@@ -6,12 +6,24 @@
 $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invalid' : '';
 ?>
 
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-sliders me-1"></i>
+        <strong>Edit indikator <code><?= e($indicator['code']) ?></code></strong>, perbarui definisi,
+        satuan, dan target indikator Monev.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/monev/indicators')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali
+        </a>
+    </div>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-lg-7">
         <div class="card">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-white">
                 <strong>Edit indikator <code><?= e($indicator['code']) ?></code></strong>
-                <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/monev/indicators')) ?>">← Kembali</a>
             </div>
             <div class="card-body">
                 <?php if ($errors): ?>

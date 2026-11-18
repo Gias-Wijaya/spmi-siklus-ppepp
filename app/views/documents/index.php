@@ -8,6 +8,23 @@ $query = array_filter([
     'approval'    => $filters['approval'],
 ], static fn ($v) => $v !== '' && $v !== null);
 ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-file-earmark-text me-1"></i>
+        <strong>Dokumen SPMI</strong>, unggah &amp; klasifikasi kebijakan, pedoman, SOP, dan instrumen
+        dengan masa berlaku serta alur persetujuan (FR-01–FR-04).
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="<?= e(url('/documents/export' . ($query ? '?' . http_build_query($query) : ''))) ?>"
+           class="btn btn-sm btn-outline-success" title="Unduh daftar dokumen (filter ikut berlaku)">
+            <i class="bi bi-file-earlier me-1"></i>Ekspor Excel
+        </a>
+        <a href="<?= e(url('/documents/create')) ?>" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Unggah dokumen
+        </a>
+    </div>
+</div>
+
 <div class="card table-card mb-3">
     <div class="card-body">
         <form class="row g-2 align-items-end" method="get" action="<?= e(url('/documents')) ?>">
@@ -60,15 +77,6 @@ $query = array_filter([
         <span class="text-success fw-semibold">● <?= (int)$counts['green'] ?></span> ·
         <span class="text-warning fw-semibold">● <?= (int)$counts['yellow'] ?></span> ·
         <span class="text-danger fw-semibold">● <?= (int)$counts['red'] ?></span>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="<?= e(url('/documents/export' . ($query ? '?' . http_build_query($query) : ''))) ?>"
-           class="btn btn-outline-success" title="Unduh daftar dokumen (filter ikut berlaku)">
-            <i class="bi bi-file-earlier me-1"></i>Ekspor Excel
-        </a>
-        <a href="<?= e(url('/documents/create')) ?>" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Unggah dokumen
-        </a>
     </div>
 </div>
 

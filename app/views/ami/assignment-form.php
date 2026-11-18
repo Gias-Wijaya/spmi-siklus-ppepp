@@ -6,11 +6,18 @@
 $locked = $assignment['schedule_status'] === 'closed';
 ?>
 
-<div class="mb-3">
-    <a class="small" href="<?= e(url('/ami/assignments?schedule_id=' . (int)$assignment['schedule_id'])) ?>">← Kembali ke daftar penugasan</a>
-    <h1 class="h4 mt-1">Edit penugasan: <?= e((string)$assignment['unit_name']) ?></h1>
-    <div class="text-muted small">
-        Jadwal: <?= e((string)$assignment['schedule_name']) ?> (<?= e((string)$assignment['schedule_status']) ?>)
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-person-check me-1"></i>
+        <strong>Edit penugasan: <?= e((string)$assignment['unit_name']) ?></strong>, jadwal
+        <?= e((string)$assignment['schedule_name']) ?> (<?= e((string)$assignment['schedule_status']) ?>)
+        — atur auditor, ketua auditee, tanggal audit, dan nomor laporan.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark"
+           href="<?= e(url('/ami/assignments?schedule_id=' . (int)$assignment['schedule_id'])) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar penugasan
+        </a>
     </div>
 </div>
 

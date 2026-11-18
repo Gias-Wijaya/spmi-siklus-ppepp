@@ -2,6 +2,14 @@
 /** @var array $rows @var int $total @var int $page @var int $per @var array $users @var array $actions @var array $filter */
 $query = ['user' => $filter['user'], 'action' => $filter['action']];
 ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-clock-history me-1"></i>
+        <strong>Jejak audit</strong>, catatan siapa melakukan apa dan kapan pada dokumen, AMI,
+        rencana aksi, dan Monev — <?= (int)$total ?> catatan tercatat.
+    </div>
+</div>
+
 <div class="card table-card mb-3">
     <div class="card-body">
         <form class="row g-2 align-items-end" method="get" action="<?= e(url('/audit')) ?>">

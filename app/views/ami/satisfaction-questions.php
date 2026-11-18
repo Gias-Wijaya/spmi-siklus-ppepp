@@ -12,12 +12,17 @@ $typeLabel = static fn (string $t): string => match ($t) {
 };
 ?>
 
-<div class="mb-3">
-    <a class="small" href="<?= e(url('/ami/satisfaction')) ?>">← Kembali ke daftar formulir</a>
-    <h1 class="h4 mt-1">Pertanyaan: <?= e((string)$survey['name']) ?></h1>
-    <div class="text-muted small">
-        Status: <?= e((string)$survey['status']) ?> ·
-        pertanyaan <strong>skala 1–5</strong> dinilai &amp; diringkas otomatis; <strong>teks bebas</strong> dikumpulkan sebagai masukan kualitatif.
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-question-circle me-1"></i>
+        <strong>Pertanyaan: <?= e((string)$survey['name']) ?></strong>, status
+        <?= e((string)$survey['status']) ?> · pertanyaan <strong>skala 1–5</strong> dinilai &amp;
+        diringkas otomatis; <strong>teks bebas</strong> dikumpulkan sebagai masukan kualitatif.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami/satisfaction')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar formulir
+        </a>
     </div>
 </div>
 

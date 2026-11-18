@@ -9,11 +9,18 @@ $locked = $schedule && $schedule['status'] === 'closed';
 $stdId = (int)($instrument['standard_id'] ?? 0);
 ?>
 
-<div class="mb-3">
-    <a class="small" href="<?= e(url('/ami/instruments?schedule_id=' . (int)($schedule['id'] ?? 0))) ?>">← Kembali ke daftar instrumen</a>
-    <h1 class="h4 mt-1">Edit instrumen: <?= e((string)$instrument['code']) ?></h1>
-    <div class="text-muted small">
-        Jadwal: <?= e($schedule['name'] ?? '—') ?> · Nilai penilaian yang sudah ada <strong>tidak berubah</strong> saat indikator diedit.
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-list-check me-1"></i>
+        <strong>Edit instrumen: <?= e((string)$instrument['code']) ?></strong>, jadwal
+        <?= e($schedule['name'] ?? '—') ?> — nilai penilaian yang sudah ada <strong>tidak berubah</strong>
+        saat indikator diedit (FR-06).
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark"
+           href="<?= e(url('/ami/instruments?schedule_id=' . (int)($schedule['id'] ?? 0))) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar instrumen
+        </a>
     </div>
 </div>
 

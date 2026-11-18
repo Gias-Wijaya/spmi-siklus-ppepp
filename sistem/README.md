@@ -64,6 +64,8 @@ Aplikasi nyata sudah dibangun di root proyek dan **teruji end-to-end**:
 
 **Optimasi UI/UX (16 Nov 2026 — teruji ulang 328/328):** sidebar **responsif** (hamburger → offcanvas di HP), **Bootstrap Icons + favicon** (emoji terhapus), design system `app.css` (kartu/tabel/form/tombol/empty state), **judul ganda dihapus** (topbar = `<h1>` tunggal), **anti double-submit** (spinner), lihat-sandi di login, avatar inisial — seluruh teks yang dipantau skrip uji dipertahankan.
 
+**Optimasi UI/UX tahap 2 (18 Nov 2026 — regresi penuh 383/383):** **topbar seragam** (remah rot otomatis mengikuti rute + `<h1>` halaman) · **pencarian global** `GET /search` — satu kotak mencari dokumen SPMI, temuan AMI, dan rencana aksi (PIC difilter untuk anggota) dengan sorotan kata kunci, pintasan tekan `/` · **menu pengguna dropdown** (nama + unit + peran, Notifikasi, Jejak Audit, Keluar) menggantikan tombol "Keluar" · **sidebar mode ringkas** (klik toggle → ikon saja, preferensi disimpan di `localStorage`) · **page-head seragam** di seluruh halaman (ikon + deskripsi + aksi di slot kanan) · **strip mini-stat dasbor** (4 metrik dalam satu kartu) — seluruh teks yang dipantau skrip uji dipertahankan.
+
 ### Cara menjalankan
 
 ```bat

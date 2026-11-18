@@ -16,6 +16,14 @@ $statCard = static function (string $label, int $value, string $valueCls, string
     return '<div class="col-6 col-lg-3"><div class="card stat-card p-3 h-100">' . $inner . '</div></div>';
 };
 ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-speedometer2 me-1"></i>
+        <strong>Ikhtisar siklus PPEPP</strong>, status dokumen SPMI, temuan AMI, dan tindak lanjut
+        terkini dalam satu pandangan.
+    </div>
+</div>
+
 <div class="row g-3 mb-3">
     <?= $statCard('Dokumen berlaku', (int)$stats['green'], 'text-success', 'bi-check2-circle', 'bg-success-subtle text-success') ?>
     <?= $statCard('Perlu revisi', (int)$stats['yellow'], 'text-warning', 'bi-pencil-square', 'bg-warning-subtle text-warning') ?>
@@ -23,13 +31,29 @@ $statCard = static function (string $label, int $value, string $valueCls, string
     <?= $statCard('Menunggu persetujuan', (int)$stats['pending'], 'text-info', 'bi-hourglass-split', 'bg-info-subtle text-info') ?>
 </div>
 
-<div class="row g-3 mb-3">
-    <?= $statCard('Total dokumen', (int)$stats['total'], '', 'bi-files', 'bg-primary-subtle text-primary') ?>
-    <?= $statCard('Temuan terbuka (AMI)', (int)$stats['findings'], '', 'bi-exclamation-diamond', 'bg-warning-subtle text-warning') ?>
-    <?= $statCard('Tindak lanjut berjalan', (int)$stats['actions'], '', 'bi-arrow-repeat', 'bg-primary-subtle text-primary', url('/followup')) ?>
-    <?= $statCard($isSuper ? 'Pengguna aktif' : 'Laporan Monev',
-        $isSuper ? (int)$stats['users'] : (int)$stats['monev'], '',
-        $isSuper ? 'bi-people' : 'bi-journal-text', 'bg-secondary-subtle text-secondary') ?>
+<?php
+/* Strip ringkas: empat metrik pendamping dalam satu kartu (hemat ruang). */
+$stripItem = static function (string $label, int $value, string $icon, string $chipCls,
+                              ?string $href = null): string {
+    $inner = '<span class="stat-icon ' . e($chipCls) . '"><i class="bi ' . e($icon) . '"></i></span>'
+        . '<span class="min-w-0"><span class="strip-num">' . $value . '</span>'
+        . '<span class="strip-label">' . e($label) . '</span></span>';
+    if ($href !== null) {
+        return '<a class="stat-strip-item" href="' . e($href) . '">' . $inner . '</a>';
+    }
+    return '<div class="stat-strip-item">' . $inner . '</div>';
+};
+?>
+<div class="card mb-3">
+    <div class="stat-strip">
+        <?= $stripItem('Total dokumen', (int)$stats['total'], 'bi-files', 'bg-primary-subtle text-primary', url('/documents')) ?>
+        <?= $stripItem('Temuan terbuka (AMI)', (int)$stats['findings'], 'bi-exclamation-diamond', 'bg-warning-subtle text-warning', url('/ami/findings')) ?>
+        <?= $stripItem('Tindak lanjut berjalan', (int)$stats['actions'], 'bi-arrow-repeat', 'bg-primary-subtle text-primary', url('/followup')) ?>
+        <?= $stripItem($isSuper ? 'Pengguna aktif' : 'Laporan Monev',
+            $isSuper ? (int)$stats['users'] : (int)$stats['monev'],
+            $isSuper ? 'bi-people' : 'bi-journal-text', 'bg-secondary-subtle text-secondary',
+            $isSuper ? url('/users') : url('/monev')) ?>
+    </div>
 </div>
 
 <div class="row g-3">

@@ -15,10 +15,11 @@ $statusBadge = static function (string $status): string {
 };
 ?>
 
-<div class="mb-3">
-    <h1 class="h4 mb-1">Formulir Kepuasan Pengguna</h1>
-    <div class="text-muted small">
-        Kuisioner layanan mutu — satu responden mengisi satu kali; rekap skor dihitung otomatis (FR-07/FR-08).
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-emoji-smile me-1"></i>
+        <strong>Formulir Kepuasan Pengguna</strong>, kuisioner layanan mutu — satu responden mengisi
+        satu kali; rekap skor dihitung otomatis (FR-07/FR-08).
     </div>
 </div>
 

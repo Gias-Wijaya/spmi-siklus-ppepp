@@ -5,6 +5,18 @@ $fill      = static fn (string $field, string $default = ''): string => old($fie
 $isSuper   = Auth::isSuperAdmin();
 $formTitle = $isEdit ? 'Ubah Metadata Dokumen' : 'Unggah Dokumen SPMI';
 ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-<?= $isEdit ? 'pencil-square' : 'cloud-arrow-up' ?> me-1"></i>
+        <strong><?= e($formTitle) ?></strong><?= $isEdit ? ', perbarui metadata, klasifikasi, dan masa berlaku dokumen.' : ', lengkapi metadata, klasifikasi, dan masa berlaku dokumen baru.' ?>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url($isEdit ? '/documents/' . (int)$doc['id'] : '/documents')) ?>">
+            <i class="bi bi-arrow-left me-1"></i><?= $isEdit ? 'Kembali ke detail' : 'Kembali ke daftar' ?>
+        </a>
+    </div>
+</div>
+
 <div class="card table-card" style="max-width:900px">
     <div class="card-header bg-white"><strong><?= e($formTitle) ?></strong></div>
     <div class="card-body">

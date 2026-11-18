@@ -1,10 +1,18 @@
 <?php /** @var array $rows @var int $total @var int $page @var int $per */ ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="text-muted small"><?= (int)$total ?> notifikasi</div>
-    <form method="post" action="<?= e(url('/notifications/read-all')) ?>">
-        <?= csrf_field() ?>
-        <button class="btn btn-sm btn-outline-secondary" type="submit">Tandai semua sudah dibaca</button>
-    </form>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-bell me-1"></i>
+        <strong>Notifikasi</strong>, <?= (int)$total ?> pemberitahuan masa berlaku, tenggat, dan status siklus;
+        bertaut langsung ke halaman terkait (FR-15).
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <form method="post" action="<?= e(url('/notifications/read-all')) ?>">
+            <?= csrf_field() ?>
+            <button class="btn btn-sm btn-outline-secondary" type="submit">
+                <i class="bi bi-check2-all me-1"></i>Tandai semua sudah dibaca
+            </button>
+        </form>
+    </div>
 </div>
 
 <div class="card table-card">

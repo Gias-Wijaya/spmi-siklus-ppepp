@@ -145,6 +145,9 @@ $router->get('/units/{id}/edit', 'UnitController@edit');
 $router->post('/units/{id}',     'UnitController@update');
 $router->post('/units/{id}/delete', 'UnitController@destroy');
 
+/* ---------------------------------------------------------------- Pencarian global */
+$router->get('/search',                   'SearchController@index');
+
 /* ---------------------------------------------------------------- Notifikasi & jejak audit (M5) */
 $router->get('/notifications',            'NotificationController@index');
 $router->post('/notifications/read-all',  'NotificationController@readAll');

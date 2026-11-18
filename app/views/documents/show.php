@@ -7,18 +7,26 @@ $state   = (string)$doc['approval_status'];
 $shown   = in_array($state, ['approved', 'archived'], true);
 $editable = $canEdit && !in_array($state, ['archived'], true);
 ?>
-<div class="d-flex justify-content-between align-items-start mb-3">
-    <div>
-        <h2 class="h5 mb-1"><?= e($doc['title']) ?></h2>
-        <div class="small text-muted">
-            <?= $doc['doc_number'] ? e($doc['doc_number']) . ' · ' : '' ?>
-            v<?= e($doc['version']) ?> ·
-            <?= e($doc['category_name'] ?? 'Tanpa kategori') ?> ·
-            <?= e($doc['standard_name'] ?? 'Tanpa standar') ?> ·
-            <?= e($doc['unit_name'] ?? 'Tanpa unit') ?>
-        </div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-file-earmark-text me-1"></i>
+        <strong><?= e($doc['title']) ?></strong>,
+        <?= $doc['doc_number'] ? e($doc['doc_number']) . ' · ' : '' ?>
+        v<?= e($doc['version']) ?> ·
+        <?= e($doc['category_name'] ?? 'Tanpa kategori') ?> ·
+        <?= e($doc['standard_name'] ?? 'Tanpa standar') ?> ·
+        <?= e($doc['unit_name'] ?? 'Tanpa unit') ?>
     </div>
-    <a href="<?= e(url('/documents')) ?>" class="btn btn-sm btn-outline-secondary">← Daftar dokumen</a>
+    <div class="d-flex gap-2 flex-wrap">
+        <?php if ($editable): ?>
+            <a href="<?= e(url('/documents/' . (int)$doc['id'] . '/edit')) ?>" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil-square me-1"></i>Ubah
+            </a>
+        <?php endif; ?>
+        <a href="<?= e(url('/documents')) ?>" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Daftar dokumen
+        </a>
+    </div>
 </div>
 
 <?php if ($errors ?? []): ?>

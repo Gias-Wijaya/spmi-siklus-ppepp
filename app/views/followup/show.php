@@ -25,14 +25,19 @@ $evidenceStatus = static function (string $s): string {
 };
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div>
-        <a class="small text-muted" href="<?= e(url('/followup')) ?>">← Kembali ke daftar rencana aksi</a>
-        <div class="text-muted small mt-1">
-            Sumber: temuan AMI — <?= e($plan['schedule_name']) ?> · <?= e($plan['unit_name']) ?>
-        </div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-arrow-repeat me-1"></i>
+        <strong>Rencana aksi tindak lanjut</strong>, sumber: temuan AMI —
+        <?= e($plan['schedule_name']) ?> · <?= e($plan['unit_name']) ?> — bukti perbaikan diverifikasi
+        oleh LPM sebelum ditutup (FR-10–FR-12).
     </div>
-    <?= action_status_badge((string)$plan['status']) ?>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <?= action_status_badge((string)$plan['status']) ?>
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/followup')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Daftar rencana aksi
+        </a>
+    </div>
 </div>
 
 <?php if ($errors): ?>

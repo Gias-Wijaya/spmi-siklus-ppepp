@@ -1,4 +1,16 @@
 <?php /** @var array $unit @var array $errors */ ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-buildings me-1"></i>
+        <strong>Ubah unit kerja</strong>, perbarui kode dan nama unit pemilik dokumen serta auditee AMI.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/units')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar
+        </a>
+    </div>
+</div>
+
 <div class="card table-card" style="max-width:640px">
     <div class="card-header bg-white"><strong>Ubah Unit Kerja</strong></div>
     <div class="card-body">

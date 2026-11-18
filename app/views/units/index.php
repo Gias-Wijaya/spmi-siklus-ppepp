@@ -1,9 +1,14 @@
 <?php /** @var array $rows @var array $errors */ ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="text-muted small"><?= count($rows) ?> unit kerja</div>
-    <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#unitForm">
-        ＋ Tambah unit
-    </button>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-buildings me-1"></i>
+        <strong>Unit kerja</strong>, daftar unit pemilik dokumen dan auditee — <?= count($rows) ?> unit terdaftar.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#unitForm">
+            <i class="bi bi-plus-lg me-1"></i>Tambah unit
+        </button>
+    </div>
 </div>
 
 <div class="collapse mb-3" id="unitForm">

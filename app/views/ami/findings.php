@@ -9,13 +9,13 @@ $filterSev    = (string)($_GET['severity'] ?? '');
 $locked = $schedule && $schedule['status'] === 'closed';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div>
-        <div class="text-muted small">
-            Temuan otomatis dari penilaian skor ≤ 2 atau dicatat manual; diteruskan ke modul Pengendalian–Peningkatan (M4).
-        </div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-exclamation-diamond me-1"></i>
+        <strong>Temuan AMI</strong>, otomatis dari penilaian skor ≤ 2 atau dicatat manual;
+        diteruskan ke modul Pengendalian–Peningkatan (M4) (FR-08).
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami/report' . ($schedule ? '?schedule_id=' . (int)$schedule['id'] : ''))) ?>"><i class="bi bi-file-earmark-bar-graph me-1"></i>Laporan AMI</a>
         <form method="get" action="<?= e(url('/ami/findings')) ?>" class="d-flex gap-2">
             <select class="form-select form-select-sm" name="schedule_id">

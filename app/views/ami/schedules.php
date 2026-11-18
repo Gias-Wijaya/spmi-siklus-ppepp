@@ -14,6 +14,19 @@ $statusBadge = static function (string $status): string {
 };
 ?>
 
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-calendar2-week me-1"></i>
+        <strong>Jadwal AMI</strong>, siklus audit tahunan: draf → berjalan → ditutup; menentukan
+        periode penugasan auditor dan penilaian (FR-07).
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Dasbor AMI
+        </a>
+    </div>
+</div>
+
 <div class="row g-3">
     <div class="col-lg-4">
         <div class="card">

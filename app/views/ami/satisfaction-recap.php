@@ -11,13 +11,18 @@ $chartLabels    = array_map(static fn ($q) => mb_substr((string)$q['question'], 
 $chartScores    = array_map(static fn ($q) => (float)$q['avg_score'], $skalaQuestions);
 ?>
 
-<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-    <div>
-        <a class="small" href="<?= e(url('/ami/satisfaction')) ?>">← Kembali ke daftar formulir</a>
-        <h1 class="h4 mt-1">Rekap: <?= e((string)$survey['name']) ?></h1>
-        <div class="text-muted small">Dihitung otomatis dari jawaban responden (skala 1–5).</div>
+<div class="page-head no-print">
+    <div class="page-desc">
+        <i class="bi bi-clipboard2-data me-1"></i>
+        <strong>Rekap: <?= e((string)$survey['name']) ?></strong>, dihitung otomatis dari jawaban
+        responden (skala 1–5) — rerata tertimbang, rekap per pertanyaan, dan kutipan masukan (FR-08).
     </div>
-    <button class="btn btn-sm btn-dark" type="button" onclick="window.print()"><i class="bi bi-printer me-1"></i>Cetak / PDF</button>
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-dark" type="button" onclick="window.print()"><i class="bi bi-printer me-1"></i>Cetak / PDF</button>
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami/satisfaction')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar formulir
+        </a>
+    </div>
 </div>
 
 <style>

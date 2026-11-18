@@ -12,12 +12,13 @@ $userName = static fn (?int $id): string => $id && isset($users[array_search($id
     : '—';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div>
-        <div class="text-muted small">
-            Pasangan <strong>auditor–auditee</strong> ditetapkan per unit — auditor adalah penugasan, bukan hak akses terpisah.
-        </div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-person-check me-1"></i>
+        Pasangan <strong>auditor–auditee</strong> ditetapkan per unit — auditor adalah penugasan,
+        bukan hak akses terpisah (FR-07).
     </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
     <form method="get" action="<?= e(url('/ami/assignments')) ?>" class="d-flex gap-2">
         <select class="form-select form-select-sm" name="schedule_id">
             <?php foreach ($periods as $p): ?>
@@ -28,6 +29,7 @@ $userName = static fn (?int $id): string => $id && isset($users[array_search($id
         </select>
         <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
     </form>
+    </div>
 </div>
 
 <?php if (!$schedule): ?>

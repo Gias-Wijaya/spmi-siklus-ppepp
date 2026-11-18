@@ -20,12 +20,13 @@ $avgAll = $scored
     }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-3 no-print flex-wrap gap-2">
-    <div>
-        <a class="small" href="<?= e(url('/ami')) ?>">← Kembali ke dasbor AMI</a>
-        <h1 class="h4 mt-1">Laporan Temuan AMI — <?= e((string)$schedule['name']) ?></h1>
+<div class="page-head no-print">
+    <div class="page-desc">
+        <i class="bi bi-file-earmark-bar-graph me-1"></i>
+        <strong>Laporan Temuan AMI — <?= e((string)$schedule['name']) ?></strong>, rekap skor per
+        unit/standar/indikator, analisis gap, dan daftar temuan siap cetak (FR-08, UC-24).
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <form method="get" action="<?= e(url('/ami/report')) ?>" class="d-flex gap-2">
             <select class="form-select form-select-sm" name="schedule_id">
                 <?php foreach ($periods as $p): ?>

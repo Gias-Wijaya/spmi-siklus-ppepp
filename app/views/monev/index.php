@@ -11,28 +11,31 @@ $unitCount = count($reports);
 $filledCount = count(array_filter($reports, static fn ($r) => $r['report_id'] !== null));
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="text-muted small">
-        Tren capaian 3-bulanan · menampilkan periode
-        <strong><?= $period ? e($period['name']) : '-' ?></strong>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-graph-up me-1"></i>
+        <strong>Dasbor Monev</strong>, tren capaian 3-bulanan per unit dan per indikator — menampilkan
+        periode <strong><?= $period ? e($period['name']) : '-' ?></strong> (FR-05).
     </div>
-    <form method="get" action="<?= e(url('/monev')) ?>" class="d-flex gap-2">
-        <select class="form-select form-select-sm" name="period_id">
-            <?php foreach ($periods as $p): ?>
-                <option value="<?= (int)$p['id'] ?>" <?= $period && (int)$p['id'] === (int)$period['id'] ? 'selected' : '' ?>>
-                    <?= e($p['name']) ?> (<?= format_date($p['start_date']) ?> – <?= format_date($p['end_date']) ?>)
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
-    </form>
-    <?php if ($period): ?>
-        <a class="btn btn-sm btn-outline-success"
-           href="<?= e(url('/monev/export?period_id=' . (int)$period['id'])) ?>"
-           title="Unduh rekap periode ini (per unit + per indikator)">
-            <i class="bi bi-file-earlier me-1"></i>Ekspor Excel
-        </a>
-    <?php endif; ?>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <form method="get" action="<?= e(url('/monev')) ?>" class="d-flex gap-2">
+            <select class="form-select form-select-sm" name="period_id">
+                <?php foreach ($periods as $p): ?>
+                    <option value="<?= (int)$p['id'] ?>" <?= $period && (int)$p['id'] === (int)$period['id'] ? 'selected' : '' ?>>
+                        <?= e($p['name']) ?> (<?= format_date($p['start_date']) ?> – <?= format_date($p['end_date']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
+        </form>
+        <?php if ($period): ?>
+            <a class="btn btn-sm btn-outline-success"
+               href="<?= e(url('/monev/export?period_id=' . (int)$period['id'])) ?>"
+               title="Unduh rekap periode ini (per unit + per indikator)">
+                <i class="bi bi-file-earlier me-1"></i>Ekspor Excel
+            </a>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php if (!$periods): ?>

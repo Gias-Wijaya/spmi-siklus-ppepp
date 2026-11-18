@@ -1,22 +1,35 @@
 <?php /** @var array $rows @var array $units @var array $filter */ ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <form class="row g-2" method="get" action="<?= e(url('/users')) ?>">
-        <div class="col-auto">
-            <input class="form-control" type="search" name="q" value="<?= e($filter['q']) ?>"
-                   placeholder="Cari nama / email / NIP…">
-        </div>
-        <div class="col-auto">
-            <select class="form-select" name="role">
-                <option value="">Semua peran</option>
-                <option value="super_admin" <?= $filter['role'] === 'super_admin' ? 'selected' : '' ?>>Super Admin (LPM)</option>
-                <option value="anggota" <?= $filter['role'] === 'anggota' ? 'selected' : '' ?>>Anggota (Waket)</option>
-            </select>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-outline-secondary" type="submit">Filter</button>
-        </div>
-    </form>
-    <a href="<?= e(url('/users/create')) ?>" class="btn btn-success">＋ Tambah pengguna</a>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-people me-1"></i>
+        <strong>Pengguna</strong>, akun Super Admin (LPM) dan anggota (Waket I–IV) beserta peran serta status aktifnya.
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="<?= e(url('/users/create')) ?>" class="btn btn-sm btn-success">
+            <i class="bi bi-person-plus me-1"></i>Tambah pengguna
+        </a>
+    </div>
+</div>
+
+<div class="card table-card mb-3">
+    <div class="card-body">
+        <form class="row g-2" method="get" action="<?= e(url('/users')) ?>">
+            <div class="col-auto">
+                <input class="form-control" type="search" name="q" value="<?= e($filter['q']) ?>"
+                       placeholder="Cari nama / email / NIP…">
+            </div>
+            <div class="col-auto">
+                <select class="form-select" name="role">
+                    <option value="">Semua peran</option>
+                    <option value="super_admin" <?= $filter['role'] === 'super_admin' ? 'selected' : '' ?>>Super Admin (LPM)</option>
+                    <option value="anggota" <?= $filter['role'] === 'anggota' ? 'selected' : '' ?>>Anggota (Waket)</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary" type="submit">Filter</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="card table-card">

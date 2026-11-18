@@ -24,21 +24,25 @@ $openSurveys  = array_values(array_filter($surveys, static fn ($s) => $s['status
 $totalAnswers = array_sum(array_map(static fn ($s) => (int)$s['response_count'], $surveys));
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="text-muted small">
-        Tahun AMI <strong><?= $schedule ? e($schedule['name']) : '-' ?></strong>
-        <?= $schedule ? '(' . e($schedule['status']) . ')' : '' ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-clipboard2-check me-1"></i>
+        <strong>Dasbor AMI</strong>, tahun AMI <strong><?= $schedule ? e($schedule['name']) : '-' ?></strong>
+        <?= $schedule ? '(' . e($schedule['status']) . ')' : '' ?> — progres penilaian, skor per unit
+        dan standar, temuan, serta kepuasan pengguna (FR-07).
     </div>
-    <form method="get" action="<?= e(url('/ami')) ?>" class="d-flex gap-2">
-        <select class="form-select form-select-sm" name="schedule_id">
-            <?php foreach ($periods as $p): ?>
-                <option value="<?= (int)$p['id'] ?>" <?= $schedule && (int)$p['id'] === (int)$schedule['id'] ? 'selected' : '' ?>>
-                    <?= e($p['name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
-    </form>
+    <div class="d-flex gap-2 flex-wrap">
+        <form method="get" action="<?= e(url('/ami')) ?>" class="d-flex gap-2">
+            <select class="form-select form-select-sm" name="schedule_id">
+                <?php foreach ($periods as $p): ?>
+                    <option value="<?= (int)$p['id'] ?>" <?= $schedule && (int)$p['id'] === (int)$schedule['id'] ? 'selected' : '' ?>>
+                        <?= e($p['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
+        </form>
+    </div>
 </div>
 
 <?php if (!$periods): ?>

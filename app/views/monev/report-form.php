@@ -10,16 +10,19 @@ foreach ($values as $v) {
 $isSuper = Auth::isSuperAdmin();
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div>
-        <div class="text-muted small">
-            Periode <strong><?= e($period['name']) ?></strong> ·
-            <?= format_date($period['start_date']) ?> – <?= format_date($period['end_date']) ?> ·
-            Unit <strong><?= e($unit['name']) ?></strong>
-        </div>
-        <div class="small text-muted">Monev diisi <strong>3 bulan sekali</strong>; nilai = capaian aktual, target mengikuti indikator.</div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-pencil-square me-1"></i>
+        <strong>Isi capaian Monev</strong>, periode <strong><?= e($period['name']) ?></strong> ·
+        <?= format_date($period['start_date']) ?> – <?= format_date($period['end_date']) ?> ·
+        unit <strong><?= e($unit['name']) ?></strong> — diisi 3 bulan sekali; nilai = capaian aktual,
+        target mengikuti indikator (FR-04).
     </div>
-    <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/monev')) ?>">← Dasbor Monev</a>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/monev')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Dasbor Monev
+        </a>
+    </div>
 </div>
 
 <?php if ($errors): ?>

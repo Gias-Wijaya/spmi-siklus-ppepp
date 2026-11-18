@@ -27,19 +27,21 @@ foreach ($instruments as $i) {
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-    <div>
-        <a class="small" href="<?= e(url('/ami')) ?>">← Kembali ke dasbor AMI</a>
-        <div class="text-muted small mt-1">
-            <?= e((string)$assignment['schedule_name']) ?> ·
-            auditor: <?= e($assignment['auditor_name'] ?? 'belum ditetapkan') ?> ·
-            lead: <?= e($assignment['lead_name'] ?? '—') ?>
-            <?php if ($assignment['audit_date']): ?> · tanggal audit <?= format_date($assignment['audit_date']) ?><?php endif; ?>
-        </div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-clipboard2-pulse me-1"></i>
+        <strong>Penilaian AMI</strong>, <?= e((string)$assignment['schedule_name']) ?> ·
+        auditor: <?= e($assignment['auditor_name'] ?? 'belum ditetapkan') ?> ·
+        lead: <?= e($assignment['lead_name'] ?? '—') ?>
+        <?php if ($assignment['audit_date']): ?> · tanggal audit <?= format_date($assignment['audit_date']) ?><?php endif; ?>
+        — skor 0–4 per indikator, skor ≤ 2 wajib bercatatan (FR-07).
     </div>
-    <div class="text-end">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
         <?= $statusBadge ?>
-        <div class="small text-muted mt-1">Progres: <?= (int)$assessed ?>/<?= count($instruments) ?> indikator</div>
+        <div class="small text-muted">Progres: <?= (int)$assessed ?>/<?= count($instruments) ?> indikator</div>
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Dasbor AMI
+        </a>
     </div>
 </div>
 

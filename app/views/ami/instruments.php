@@ -11,12 +11,13 @@ $standardName = static fn (int $id): string => $id > 0 && isset($standards[array
     : '—';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div>
-        <div class="text-muted small">
-            Indikator <strong>dapat ditambah/diedit/dihapus</strong> — setiap perubahan tercatat otomatis (FR-06).
-        </div>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-list-check me-1"></i>
+        Indikator <strong>dapat ditambah/diedit/dihapus</strong> — setiap perubahan tercatat otomatis
+        pada jejak perubahan (FR-06).
     </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
     <form method="get" action="<?= e(url('/ami/instruments')) ?>" class="d-flex gap-2">
         <select class="form-select form-select-sm" name="schedule_id">
             <?php foreach ($periods as $p): ?>
@@ -27,6 +28,7 @@ $standardName = static fn (int $id): string => $id > 0 && isset($standards[array
         </select>
         <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
     </form>
+    </div>
 </div>
 
 <?php if (!$schedule): ?>

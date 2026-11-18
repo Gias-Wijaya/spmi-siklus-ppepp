@@ -3,6 +3,19 @@
 $isEdit = $user !== null;
 $fill   = static fn (string $field, string $default = ''): string => old($field, (string)($user[$field] ?? $default));
 ?>
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-<?= $isEdit ? 'person-square' : 'person-plus' ?> me-1"></i>
+        <strong><?= $isEdit ? 'Ubah pengguna' : 'Tambah pengguna' ?></strong>,
+        <?= $isEdit ? 'perbarui identitas, unit kerja, peran, dan status akun.' : 'daftarkan akun Super Admin (LPM) atau anggota (Waket I–IV).' ?>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/users')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke daftar
+        </a>
+    </div>
+</div>
+
 <div class="card table-card" style="max-width:760px">
     <div class="card-header bg-white">
         <strong><?= $isEdit ? 'Ubah Pengguna' : 'Tambah Pengguna' ?></strong>

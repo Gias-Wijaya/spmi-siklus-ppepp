@@ -6,6 +6,19 @@
 $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invalid' : '';
 ?>
 
+<div class="page-head">
+    <div class="page-desc">
+        <i class="bi bi-calendar3-range me-1"></i>
+        <strong>Kelola periode Monev</strong>, buka atau tutup siklus pelaporan 3-bulanan untuk
+        Wakil Ketua I–IV (FR-05).
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/monev')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Kembali ke dasbor
+        </a>
+    </div>
+</div>
+
 <div class="row g-3">
     <div class="col-lg-4">
         <div class="card">

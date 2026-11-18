@@ -37,6 +37,12 @@ $logo    = logo_file();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="<?= e(url('/assets/css/app.css')) ?>" rel="stylesheet">
+    <script>
+        /* Pulihkan preferensi sidebar ringkas sebelum paint (hindari kedip). */
+        try { if (localStorage.getItem('spmi.sidebar.compact') === '1') {
+            document.documentElement.classList.add('sidebar-compact');
+        } } catch (e) {}
+    </script>
 </head>
 <body>
 <div class="d-flex">
@@ -47,31 +53,31 @@ $logo    = logo_file();
             <?php if ($logo): ?>
                 <img src="<?= e(url('/assets/img/' . $logo)) ?>" alt="" class="brand-logo">
             <?php else: ?>
-                <i class="bi bi-shield-check me-1"></i>
-            <?php endif; ?>SPMI Terpadu
-            <small><?= e(config('app_tagline')) ?></small>
+                <i class="bi bi-shield-check"></i>
+            <?php endif; ?>
+            <span class="brand-text">SPMI Terpadu<small><?= e(config('app_tagline')) ?></small></span>
         </div>
 
         <nav class="flex-grow-1">
-            <a class="nav-item<?= $active('/') ?>" href="<?= e(url('/')) ?>">
+            <a class="nav-item<?= $active('/') ?>" href="<?= e(url('/')) ?>" title="Dasbor">
                 <i class="bi bi-speedometer2"></i><span>Dasbor</span>
             </a>
 
             <div class="nav-section">Penjaminan Mutu</div>
-            <a class="nav-item<?= $active('/documents') ?>" href="<?= e(url('/documents')) ?>">
+            <a class="nav-item<?= $active('/documents') ?>" href="<?= e(url('/documents')) ?>" title="Dokumen SPMI">
                 <i class="bi bi-file-earmark-text"></i><span>Dokumen SPMI</span>
             </a>
-            <a class="nav-item<?= $active('/monev') ?>" href="<?= e(url('/monev')) ?>">
+            <a class="nav-item<?= $active('/monev') ?>" href="<?= e(url('/monev')) ?>" title="Monev">
                 <i class="bi bi-graph-up"></i><span>Monev</span>
             </a>
-            <a class="nav-item<?= $active('/ami') ?>" href="<?= e(url('/ami')) ?>">
+            <a class="nav-item<?= $active('/ami') ?>" href="<?= e(url('/ami')) ?>" title="AMI &amp; Evaluasi">
                 <i class="bi bi-clipboard2-check"></i><span>AMI &amp; Evaluasi</span>
             </a>
-            <a class="nav-item<?= $active('/followup') ?>" href="<?= e(url('/followup')) ?>">
+            <a class="nav-item<?= $active('/followup') ?>" href="<?= e(url('/followup')) ?>" title="Pengendalian–Peningkatan">
                 <i class="bi bi-gear-wide-connected"></i><span>Pengendalian–Peningkatan</span>
             </a>
 
-            <a class="nav-item<?= $active('/notifications') ?>" href="<?= e(url('/notifications')) ?>">
+            <a class="nav-item<?= $active('/notifications') ?>" href="<?= e(url('/notifications')) ?>" title="Notifikasi">
                 <i class="bi bi-bell"></i><span>Notifikasi</span>
                 <?php if ($unread > 0): ?>
                     <span class="badge text-bg-danger"><?= $unread ?></span>
@@ -80,13 +86,13 @@ $logo    = logo_file();
 
             <?php if (Auth::isSuperAdmin()): ?>
                 <div class="nav-section">Administrasi (LPM)</div>
-                <a class="nav-item<?= $active('/users') ?>" href="<?= e(url('/users')) ?>">
+                <a class="nav-item<?= $active('/users') ?>" href="<?= e(url('/users')) ?>" title="Pengguna">
                     <i class="bi bi-people"></i><span>Pengguna</span>
                 </a>
-                <a class="nav-item<?= $active('/units') ?>" href="<?= e(url('/units')) ?>">
+                <a class="nav-item<?= $active('/units') ?>" href="<?= e(url('/units')) ?>" title="Unit Kerja">
                     <i class="bi bi-buildings"></i><span>Unit Kerja</span>
                 </a>
-                <a class="nav-item<?= $active('/audit') ?>" href="<?= e(url('/audit')) ?>">
+                <a class="nav-item<?= $active('/audit') ?>" href="<?= e(url('/audit')) ?>" title="Jejak Audit">
                     <i class="bi bi-clock-history"></i><span>Jejak Audit</span>
                 </a>
             <?php endif; ?>
@@ -108,29 +114,118 @@ $logo    = logo_file();
         <header class="topbar d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-2 min-w-0">
                 <button class="btn btn-outline-secondary" id="sidebarToggle" type="button"
-                        aria-label="Buka menu navigasi" aria-controls="sidebar">
+                        aria-label="Buka menu navigasi" aria-controls="sidebar" title="Buka/tutup menu">
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="min-w-0">
+                    <?php
+                    /* Remah rot otomatis dari path — label per segmen URL. */
+                    $crumbMap = [
+                        'documents' => 'Dokumen SPMI', 'monev' => 'Monev',
+                        'ami' => 'AMI & Evaluasi', 'followup' => 'Pengendalian–Peningkatan',
+                        'notifications' => 'Notifikasi', 'users' => 'Pengguna',
+                        'units' => 'Unit Kerja', 'audit' => 'Jejak Audit',
+                        'search' => 'Pencarian', 'create' => 'Tambah baru',
+                        'edit' => 'Ubah', 'export' => 'Ekspor', 'report' => 'Laporan',
+                        'findings' => 'Temuan', 'instruments' => 'Instrumen',
+                        'assignments' => 'Penugasan', 'assess' => 'Penilaian',
+                        'satisfaction' => 'Kepuasan', 'questions' => 'Pertanyaan',
+                        'recap' => 'Rekap', 'fill' => 'Isi', 'periods' => 'Periode',
+                        'indicators' => 'Indikator', 'plans' => 'Rencana Aksi',
+                        'evidence' => 'Bukti', 'schedules' => 'Jadwal',
+                        'read-all' => 'Tandai semua', 'download' => 'Unduh',
+                        'delete' => 'Hapus', 'detail' => 'Detail',
+                    ];
+                    $crumbs = [];
+                    if ($current !== '/') {
+                        $crumbs[] = ['label' => 'Dasbor', 'href' => url('/')];
+                        $parts = explode('/', trim($current, '/'));
+                        $n     = count($parts);
+                        $acc   = '';
+                        foreach ($parts as $i => $seg) {
+                            $acc     .= '/' . $seg;
+                            $isLast   = $i === $n - 1;
+                            $label    = ctype_digit($seg)
+                                ? '#' . $seg
+                                : ($crumbMap[$seg] ?? ucfirst(str_replace('-', ' ', $seg)));
+                            $crumbs[] = ['label' => $label, 'href' => $isLast ? null : url($acc)];
+                        }
+                    }
+                    ?>
+                    <?php if ($crumbs): ?>
+                        <nav class="crumbs" aria-label="Remah rot">
+                            <?php foreach ($crumbs as $i => $c): ?>
+                                <?php if ($i > 0): ?><span class="crumb-sep">/</span><?php endif; ?>
+                                <?php if ($c['href'] !== null): ?>
+                                    <a href="<?= e($c['href']) ?>"><?= e($c['label']) ?></a>
+                                <?php else: ?>
+                                    <span class="crumb-current"><?= e($c['label']) ?></span>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </nav>
+                    <?php endif; ?>
                     <h1 class="h5 mb-0 text-truncate"><?= e($title ?? 'Dasbor') ?></h1>
-                    <small><?= e(config('app_name')) ?> · <?= e(config('app_tagline')) ?></small>
                 </div>
             </div>
 
+            <form class="topbar-search" role="search" method="get" action="<?= e(url('/search')) ?>">
+                <i class="bi bi-search"></i>
+                <input class="form-control" type="search" id="globalSearch" name="q"
+                       value="<?= e($_GET['q'] ?? '') ?>"
+                       placeholder="Cari dokumen, temuan, rencana aksi…"
+                       aria-label="Pencarian global" autocomplete="off">
+                <span class="search-kbd" aria-hidden="true">/</span>
+            </form>
+
             <div class="d-flex align-items-center gap-2">
                 <a href="<?= e(url('/notifications')) ?>" class="btn btn-sm btn-outline-secondary position-relative"
-                   aria-label="Notifikasi">
+                   aria-label="Notifikasi" title="Notifikasi">
                     <i class="bi bi-bell"></i>
                     <?php if ($unread > 0): ?>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $unread ?></span>
                     <?php endif; ?>
                 </a>
-                <form method="post" action="<?= e(url('/logout')) ?>" class="mb-0">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-sm btn-outline-danger" type="submit">
-                        <i class="bi bi-box-arrow-right me-1"></i>Keluar
+
+                <div class="dropdown user-menu">
+                    <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false" aria-label="Menu pengguna">
+                        <span class="avatar"><?= e($initial) ?></span>
+                        <span class="user-name"><?= e($currentUser['name'] ?? '-') ?></span>
                     </button>
-                </form>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <h6 class="dropdown-header"><?= e($currentUser['name'] ?? '-') ?>
+                                <small><?= e($currentUser['unit_name'] ?? 'Tanpa unit') ?> ·
+                                    <?= Auth::isSuperAdmin() ? 'LPM (Super Admin)' : 'Anggota' ?></small>
+                            </h6>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="<?= e(url('/notifications')) ?>">
+                                <i class="bi bi-bell me-1"></i>Notifikasi
+                                <?php if ($unread > 0): ?>
+                                    <span class="badge text-bg-danger float-end"><?= $unread ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                        <?php if (Auth::isSuperAdmin()): ?>
+                            <li>
+                                <a class="dropdown-item" href="<?= e(url('/audit')) ?>">
+                                    <i class="bi bi-clock-history me-1"></i>Jejak Audit
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="<?= e(url('/logout')) ?>" class="m-0">
+                                <?= csrf_field() ?>
+                                <button class="dropdown-item text-danger-soft" type="submit">
+                                    <i class="bi bi-box-arrow-right me-1"></i>Keluar
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </header>
 
@@ -159,6 +254,7 @@ $logo    = logo_file();
     var sidebar = document.getElementById('sidebar');
     var backdrop = document.getElementById('sidebarBackdrop');
     var toggle = document.getElementById('sidebarToggle');
+    var compactKey = 'spmi.sidebar.compact';
 
     function setSidebar(open) {
         if (!sidebar) return;
@@ -166,7 +262,15 @@ $logo    = logo_file();
         if (backdrop) backdrop.classList.toggle('show', open);
         document.body.style.overflow = open ? 'hidden' : '';
     }
+
+    /* Toggle: ≥768px → mode ringkas (ikon saja, preferensi tersimpan);
+       <768px → laci geser seperti sebelumnya. */
     if (toggle) toggle.addEventListener('click', function () {
+        if (window.innerWidth >= 768) {
+            var compact = document.documentElement.classList.toggle('sidebar-compact');
+            try { localStorage.setItem(compactKey, compact ? '1' : '0'); } catch (e) {}
+            return;
+        }
         setSidebar(!sidebar.classList.contains('show'));
     });
     if (backdrop) backdrop.addEventListener('click', function () { setSidebar(false); });
@@ -175,6 +279,14 @@ $logo    = logo_file();
     });
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') setSidebar(false);
+        /* Shortcut "/" — fokus ke pencarian global (kecuali sedang mengetik). */
+        if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            var t = document.activeElement;
+            var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'
+                || t.tagName === 'SELECT' || t.isContentEditable);
+            var box = document.getElementById('globalSearch');
+            if (!typing && box) { e.preventDefault(); box.focus(); box.select(); }
+        }
     });
     window.addEventListener('resize', function () {
         if (window.innerWidth >= 768) setSidebar(false);

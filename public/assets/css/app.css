@@ -107,14 +107,17 @@ a:hover { color: var(--accent-600); }
     color: #fff;
     line-height: 1.35;
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
 }
 
 /* Wordmark: ikon jadi ubin gradien (tanpa perubahan markup) */
 .sidebar .brand .bi {
     width: 1.9rem;
     height: 1.9rem;
-    margin-right: 0.55rem;
-    vertical-align: -0.5rem;
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -125,6 +128,8 @@ a:hover { color: var(--accent-600); }
     box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.7);
 }
 
+.brand-text { min-width: 0; }
+
 .sidebar .brand small {
     display: block;
     font-weight: 400;
@@ -132,6 +137,9 @@ a:hover { color: var(--accent-600); }
     color: #8fa3bd;
     margin-top: 0.35rem;
     letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Logo institusi — otomatis terpakai bila berkas ada di public/assets/img/
@@ -140,8 +148,7 @@ a:hover { color: var(--accent-600); }
 .brand-logo {
     width: 2rem;
     height: 2rem;
-    margin-right: 0.6rem;
-    vertical-align: -0.5rem;
+    flex: 0 0 auto;
     object-fit: contain;
     background: #fff;
     border-radius: 0.6rem;
@@ -248,19 +255,67 @@ a:hover { color: var(--accent-600); }
     box-shadow: 0 4px 12px -4px rgba(37, 99, 235, 0.6);
 }
 
+/* ------------------------------------------- Sidebar mode ringkas (ikon) */
+/* Dipicu kelas pada <html> (html.sidebar-compact) — hanya ≥768px. Lebar
+   menyusut ke 78px, label & bagian teks disembunyikan, ikon di tengah. */
+@media (min-width: 768px) {
+    html.sidebar-compact .sidebar {
+        width: 78px;
+        flex: 0 0 78px;
+    }
+    html.sidebar-compact .sidebar .brand {
+        padding: 1.15rem 0 1rem;
+        justify-content: center;
+    }
+    html.sidebar-compact .sidebar .brand-text { display: none; }
+    html.sidebar-compact .sidebar .nav-section {
+        height: 1px;
+        padding: 0.7rem 1.15rem 0.3rem;
+        overflow: hidden;
+        text-indent: -999px;
+        background: rgba(255, 255, 255, 0.07);
+        background-clip: content-box;
+    }
+    html.sidebar-compact .sidebar a.nav-item {
+        justify-content: center;
+        padding: 0.6rem 0.5rem;
+        margin: 0.14rem 0.55rem;
+        position: relative;
+    }
+    html.sidebar-compact .sidebar a.nav-item span:not(.badge) { display: none; }
+    html.sidebar-compact .sidebar a.nav-item .badge {
+        position: absolute;
+        top: 0.2rem;
+        right: 0.35rem;
+        margin: 0;
+        font-size: 0.62rem;
+        padding: 0.22em 0.42em;
+    }
+    html.sidebar-compact .sidebar .sidebar-footer {
+        justify-content: center;
+        padding: 0.9rem 0;
+    }
+    html.sidebar-compact .sidebar .sidebar-footer .meta { display: none; }
+    /* Tooltip sederhana lewat title browser — beri jarak aman ikon aktif */
+    html.sidebar-compact .sidebar a.nav-item.active {
+        box-shadow: inset 3px 0 0 var(--accent-400);
+    }
+}
+
 /* ------------------------------------------------------------- Topbar */
 .topbar {
     background: rgba(255, 255, 255, 0.78);
     -webkit-backdrop-filter: blur(14px) saturate(180%);
     backdrop-filter: blur(14px) saturate(180%);
     border-bottom: 1px solid rgba(15, 23, 42, 0.07);
-    padding: 0.7rem 1.6rem;
+    padding: 0.6rem 1.6rem;
     position: sticky;
     top: 0;
     z-index: 1030;
     gap: 0.75rem;
 }
 
+/* Judul halaman: remah rot (breadcrumb) kecil di atas judul */
 .topbar h1 {
     font-size: 1.06rem;
     font-weight: 700;
@@ -273,9 +328,131 @@ a:hover { color: var(--accent-600); }
 
 .topbar .btn { border-radius: var(--radius-sm); }
 
-/* Badge lonceng menggantung di tepi kanan tombol — beri ruang ekstra agar
-   angkanya tidak menimpa tombol "Keluar" di sebelahnya. */
+/* Badge lonceng menggantung di tepi kanan tombol — beri ruang ekstra. */
 .topbar .btn.position-relative { margin-right: 0.45rem; }
+
+/* --------------------------------------------- Pencarian global (topbar) */
+.topbar-search {
+    position: relative;
+    flex: 0 1 340px;
+    min-width: 0;
+}
+.topbar-search .bi-search {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+.topbar-search .form-control {
+    padding-left: 2.35rem;
+    padding-right: 3.4rem;
+    font-size: 0.85rem;
+    background: rgba(241, 245, 249, 0.8);
+    border-color: transparent;
+}
+.topbar-search .form-control:focus { background: #fff; }
+.topbar-search .search-kbd {
+    position: absolute;
+    right: 0.55rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    pointer-events: none;
+    line-height: 1.5;
+}
+.topbar-search .form-control:focus ~ .search-kbd { display: none; }
+
+/* -------------------------------------------- Menu pengguna (dropdown) */
+.user-menu .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.25rem 0.6rem 0.25rem 0.3rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.user-menu .dropdown-toggle::after { margin-left: 0.15rem; align-self: center; }
+.user-menu .dropdown-toggle:hover,
+.user-menu .dropdown-toggle[aria-expanded="true"] {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+.user-menu .avatar {
+    width: 1.9rem;
+    height: 1.9rem;
+    font-size: 0.78rem;
+}
+.user-menu .dropdown-menu {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    padding: 0.4rem;
+    min-width: 15rem;
+    font-size: 0.87rem;
+    margin-top: 0.45rem;
+}
+.user-menu .dropdown-item {
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.65rem;
+}
+.user-menu .dropdown-item.text-danger-soft { color: #dc2626; }
+.user-menu .dropdown-item.text-danger-soft:hover { background: #fef2f2; color: #b91c1c; }
+.user-menu .dropdown-header {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: normal;
+    padding: 0.5rem 0.65rem 0.35rem;
+}
+.user-menu .dropdown-header small {
+    display: block;
+    font-weight: 500;
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+}
+
+/* --------------------------------------------------- Remah rot (breadcrumb) */
+.crumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.05rem;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.crumbs a {
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 0.3rem;
+}
+.crumbs a:hover { color: var(--accent); background: var(--accent-softer); }
+.crumbs .crumb-sep { color: #cbd5e1; font-size: 0.68rem; }
+.crumbs .crumb-current { color: #334155; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+
+/* --------------------------------------------------- Sorotan hasil pencarian */
+.search-hit {
+    background: rgba(250, 204, 21, 0.45);
+    color: inherit;
+    padding: 0 0.1em;
+    border-radius: 0.2rem;
+}
 
 #sidebarToggle {
     line-height: 1;
@@ -329,6 +506,46 @@ a:hover { color: var(--accent-600); }
     border-color: #dfe7f3;
 }
 a.stat-card:hover { transform: translateY(-2px); }
+
+/* Strip ringkas di bawah kartu status dasbor — 4 metrik padat dalam 1 baris */
+.stat-strip { display: flex; flex-wrap: wrap; gap: 0.25rem 0; }
+.stat-strip-item {
+    flex: 1 1 180px;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 1.1rem;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius);
+    transition: background var(--transition);
+    min-width: 0;
+}
+a.stat-strip-item:hover { background: rgba(37, 99, 235, 0.05); color: inherit; }
+.stat-strip-item + .stat-strip-item { box-shadow: inset 1px 0 0 var(--border); }
+.stat-strip-item .stat-icon { width: 1.9rem; height: 1.9rem; font-size: 0.92rem; }
+.stat-strip-item .min-w-0 { display: block; }
+.stat-strip-item .strip-num {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+.stat-strip-item .strip-label {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+@media (max-width: 767.98px) {
+    .stat-strip-item + .stat-strip-item { box-shadow: inset 0 1px 0 var(--border); }
+}
 
 .stat-top {
     display: flex;
@@ -766,9 +983,16 @@ textarea.form-control { padding: 0.6rem 0.85rem; line-height: 1.55; }
     .sidebar.show { transform: none; }
 
     .main > main.p-4 { padding: 1rem; }
-    .topbar { padding: 0.6rem 0.9rem; }
+    .topbar { padding: 0.55rem 0.9rem; }
     .topbar h1 { font-size: 0.97rem; }
     .topbar small { display: none; }
+    .crumbs { display: none; }
+    .topbar-search { flex: 1 1 90px; min-width: 0; }
+    .topbar-search .form-control { padding-right: 0.85rem; min-width: 0; }
+    .topbar-search .search-kbd { display: none; }
+    .user-menu .dropdown-toggle .user-name { display: none; }
+    .user-menu .dropdown-toggle { padding: 0.25rem; }
+    .user-menu .dropdown-toggle::after { display: none; }
     .stat-value { font-size: 1.5rem; }
     .card-header { padding: 0.8rem 1rem; border-radius: var(--radius); }
     .table > :not(caption) > * > * { padding: 0.6rem 0.7rem; }

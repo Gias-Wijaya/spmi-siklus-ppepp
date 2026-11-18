@@ -18,16 +18,19 @@ $score    = $report['total_score'] !== null ? (float)$report['total_score'] : nu
     }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 no-print">
-    <div class="text-muted small">
-        Laporan Monev <strong><?= e($report['period_name']) ?></strong> ·
-        Unit <strong><?= e($report['unit_name']) ?></strong>
+<div class="page-head no-print">
+    <div class="page-desc">
+        <i class="bi bi-journal-text me-1"></i>
+        <strong>Laporan Monev <?= e($report['period_name']) ?></strong>, unit
+        <strong><?= e($report['unit_name']) ?></strong> — nilai, capaian, bukti, dan review LPM.
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <button class="btn btn-sm btn-dark" type="button" onclick="window.print()">
             <i class="bi bi-printer me-1"></i>Cetak / PDF
         </button>
-        <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/monev')) ?>">← Dasbor Monev</a>
+        <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/monev')) ?>">
+            <i class="bi bi-arrow-left me-1"></i>Dasbor Monev
+        </a>
     </div>
 </div>
 
