@@ -5,7 +5,7 @@
 | # | Entitas (Tabel) | Penjelasan | Kunci Utama |
 |---|---|---|---|
 | 1 | `units` | Unit kerja / bidang (LPM, Akademik, dst.) | `id` |
-| 2 | `users` | Pengguna: **super_admin** (LPM) & **anggota** (Waket I–IV) | `id` |
+| 2 | `users` | Pengguna: **super_admin** (LPM) & **anggota** (Waket I–III) | `id` |
 | 3 | `standards` | Standar SPMI (Pendidikan, Penelitian, Pengabdian, SDM, Sarpras, Pembiayaan, Penjaminan Mutu, Data & Informasi) | `id` |
 | 4 | `document_categories` | Hierarki dokumen (Kebijakan→Pedoman→Manual/SOP→Instrumen→Formulir→Laporan), mendukung **M1** | `id` |
 | 5 | `documents` | Dokumen SPMI: nomor, versi, **tanggal & masa berlaku**, **status 🟢🟡🔴**, status persetujuan | `id` |

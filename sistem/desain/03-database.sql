@@ -472,8 +472,7 @@ INSERT INTO `units` (`code`, `name`, `description`) VALUES
 ('LPM',   'Lembaga Penjaminan Mutu', 'Super Admin sistem'),
 ('W1',    'Bidang Akademik',          'Wakil Ketua I'),
 ('W2',    'Bidang Keuangan & SDM',    'Wakil Ketua II'),
-('W3',    'Bidang Kemahasiswaan',     'Wakil Ketua III'),
-('W4',    'Bidang Pengembangan',      'Wakil Ketua IV');
+('W3',    'Bidang Kemahasiswaan',     'Wakil Ketua III');
 
 -- Pengguna awal — GANTI HASH-nya: php -r "echo password_hash('katasandi', PASSWORD_DEFAULT);"
 INSERT INTO `users` (`unit_id`, `name`, `email`, `password`, `role`) VALUES

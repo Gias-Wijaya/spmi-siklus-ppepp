@@ -7,7 +7,7 @@ $fill   = static fn (string $field, string $default = ''): string => old($field,
     <div class="page-desc">
         <i class="bi bi-<?= $isEdit ? 'person-square' : 'person-plus' ?> me-1"></i>
         <strong><?= $isEdit ? 'Ubah pengguna' : 'Tambah pengguna' ?></strong>,
-        <?= $isEdit ? 'perbarui identitas, unit kerja, peran, dan status akun.' : 'daftarkan akun Super Admin (LPM) atau anggota (Waket I–IV).' ?>
+        <?= $isEdit ? 'perbarui identitas, unit kerja, peran, dan status akun.' : 'daftarkan akun Super Admin (LPM) atau anggota (Waket I–III).' ?>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/users')) ?>">
@@ -62,7 +62,7 @@ $fill   = static fn (string $field, string $default = ''): string => old($field,
                     <label class="form-label">Peran <span class="text-danger">*</span></label>
                     <select class="form-select <?= isset($errors['role']) ? 'is-invalid' : '' ?>" name="role" required>
                         <option value="anggota" <?= $fill('role', 'anggota') === 'anggota' ? 'selected' : '' ?>>
-                            Anggota — Waket I–IV
+                            Anggota — Waket I–III
                         </option>
                         <option value="super_admin" <?= $fill('role') === 'super_admin' ? 'selected' : '' ?>>
                             Super Admin — LPM

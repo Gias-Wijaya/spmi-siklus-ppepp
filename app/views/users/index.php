@@ -2,7 +2,7 @@
 <div class="page-head">
     <div class="page-desc">
         <i class="bi bi-people me-1"></i>
-        <strong>Pengguna</strong>, akun Super Admin (LPM) dan anggota (Waket I–IV) beserta peran serta status aktifnya.
+        <strong>Pengguna</strong>, akun Super Admin (LPM) dan anggota (Waket I–III) beserta peran serta status aktifnya.
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="<?= e(url('/users/create')) ?>" class="btn btn-sm btn-success">

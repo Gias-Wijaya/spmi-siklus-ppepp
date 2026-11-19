@@ -29,7 +29,7 @@
 </form>
 
 <div class="text-center text-muted small mt-3 mb-1">
-    LPM = Super Admin · Waket I–IV = Anggota
+    LPM = Super Admin · Waket I–III = Anggota
 </div>
 
 <script>

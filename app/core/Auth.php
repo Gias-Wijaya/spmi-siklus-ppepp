@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Autentikasi & sesi pengguna (RBAC: super_admin = LPM, anggota = Waket I–IV). */
+/** Autentikasi & sesi pengguna (RBAC: super_admin = LPM, anggota = Waket I–III). */
 final class Auth
 {
     private static ?array $user = null;

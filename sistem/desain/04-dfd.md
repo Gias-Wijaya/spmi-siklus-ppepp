@@ -7,7 +7,7 @@
    Super Admin ────►│                                          │────► Laporan (PDF/Excel)
    (LPM)            │   P0  SISTEM INFORMASI PENJAMINAN        │
    Anggota ────────►│       MUTU INTERNAL – STIKOM EL RAHMA     │
-   (Waket I–IV)     │                                          │────► Notifikasi
+   (Waket I–III)    │                                          │────► Notifikasi
                     └──────────────────────────────────────────┘
                               ▲                │
                               │                ▼
@@ -45,7 +45,7 @@
 | Kode | Komponen | Keterangan |
 |---|---|---|
 | E1 | **Super Admin (LPM)** | Mengelola pengguna, dokumen, instrumen, jadwal, verifikasi, laporan |
-| E2 | **Anggota (Waket I–IV)** | Mengisi Monev, penilaian AMI, unggah dokumen unit & bukti tindak lanjut |
+| E2 | **Anggota (Waket I–III)** | Mengisi Monev, penilaian AMI, unggah dokumen unit & bukti tindak lanjut |
 | E3 | **Sistem (Timer)** | Pembaruan status masa berlaku & pengingat tenggat |
 | P1 | Kelola Dokumen SPMI | M1 |
 | P2 | Pantau Kinerja (Monev) | M2 |
@@ -91,7 +91,7 @@
 flowchart LR
   subgraph Eksisting
     SA["Super Admin (LPM)"]
-    AG["Anggota (Waket I-IV)"]
+    AG["Anggota (Waket I-III)"]
     SYS["Sistem (Timer)"]
   end
 

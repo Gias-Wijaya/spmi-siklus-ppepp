@@ -1,6 +1,6 @@
 # Sistem Informasi Penjaminan Mutu Internal — STIKOM El Rahma
 
-Sistem informasi berbasis **siklus PPEPP** (Perencanaan–Pelaksanaan–Evaluasi–Pengendalian–Peningkatan) untuk pengelolaan dokumen dan kinerja mutu di STIKOM El Rahma. Lima modul terintegrasi dalam satu basis data, dengan hak akses berbasis peran: **LPM sebagai Super Admin**, **Wakil Ketua I–IV sebagai anggota**.
+Sistem informasi berbasis **siklus PPEPP** (Perencanaan–Pelaksanaan–Evaluasi–Pengendalian–Peningkatan) untuk pengelolaan dokumen dan kinerja mutu di STIKOM El Rahma. Lima modul terintegrasi dalam satu basis data, dengan hak akses berbasis peran: **LPM sebagai Super Admin**, **Wakil Ketua I–III sebagai anggota**.
 
 - **Teknologi:** PHP 8 *tanpa framework* (PDO, router regex, pola MVC) · MySQL · Bootstrap 5 · font Inter
 - **Kebutuhan:** FR-01–FR-15 (fungsional) · NF-01–NF-08 (non-fungsional) · BR-01–BR-16 (aturan bisnis)

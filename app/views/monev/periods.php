@@ -10,7 +10,7 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
     <div class="page-desc">
         <i class="bi bi-calendar3-range me-1"></i>
         <strong>Kelola periode Monev</strong>, buka atau tutup siklus pelaporan 3-bulanan untuk
-        Wakil Ketua I–IV (FR-05).
+        Wakil Ketua I–III dan LPM (FR-05).
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/monev')) ?>">
@@ -49,7 +49,7 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Buat periode</button>
                 </form>
-                <div class="form-text">Monev diisi <strong>3 bulan sekali</strong> oleh Wakil Ketua I–IV. Periode <em>terbuka</em> menerima isian; <em>tertutup</em> mengunci seluruh isian.</div>
+                <div class="form-text">Monev diisi <strong>3 bulan sekali</strong> oleh Wakil Ketua I–III dan LPM. Periode <em>terbuka</em> menerima isian; <em>tertutup</em> mengunci seluruh isian.</div>
             </div>
         </div>
     </div>

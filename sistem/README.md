@@ -20,7 +20,7 @@
 | **M2** | Monev | Isian capaian **3-bulanan** per unit, grafik tren, telusur ke bukti | Pelaksanaan |
 | **M3** | AMI & Evaluasi | **Instrumen fleksibel (indikator bisa diedit)**, jadwal AMI tahunan, penilaian, skor, laporan temuan, **formulir kepuasan** | Evaluasi |
 | **M4** | Pengendalian–Peningkatan | Rencana aksi, PIC, tenggat, unggah bukti, verifikasi, umpan balik revisi dokumen | Pengendalian & Peningkatan |
-| **M5** | Pendukung | **RBAC** (LPM = Super Admin; Waket I–IV = anggota), notifikasi (**penjaga tenggat otomatis**), jejak audit, **ekspor CSV siap Excel + cetak/PDF** | Seluruh tahap |
+| **M5** | Pendukung | **RBAC** (LPM = Super Admin; Waket I–III = anggota), notifikasi (**penjaga tenggat otomatis**), jejak audit, **ekspor CSV siap Excel + cetak/PDF** | Seluruh tahap |
 
 ## Berkas desain
 

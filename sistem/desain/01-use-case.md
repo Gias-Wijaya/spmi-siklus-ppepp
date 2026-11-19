@@ -5,10 +5,10 @@
 | Kode | Aktor | Peran | Keterangan |
 |---|---|---|---|
 | A1 | **Super Admin (LPM)** | Pengelola sistem | Mengelola pengguna, dokumen, instrumen, jadwal, verifikasi tindak lanjut, laporan |
-| A2 | **Anggota (Waket I–IV)** | Pengguna operasional | Mengisi Monev, mengisi penilaian AMI, mengunggah bukti, mengunggah dokumen unit |
+| A2 | **Anggota (Waket I–III)** | Pengguna operasional | Mengisi Monev, mengisi penilaian AMI, mengunggah bukti, mengunggah dokumen unit |
 | A3 | **Sistem** *(aktor sekunder)* | Timer & otomasi | Mengubah status masa berlaku dokumen, mengirim notifikasi tenggat |
 
-> Sesuai hasil wawancara LPM: **LPM = Super Admin; Waket I, II, III, IV = Anggota.** Auditor AMI ditetapkan sebagai penugasan (*assignment*) dari anggota, bukan role terpisah.
+> Sesuai hasil wawancara LPM: **LPM = Super Admin; Waket I, II, III = Anggota.** Auditor AMI ditetapkan sebagai penugasan (*assignment*) dari anggota, bukan role terpisah.
 
 ## B. Daftar Use Case
 
@@ -63,7 +63,7 @@ skinparam packageStyle rectangle
 title Use Case Diagram — Sistem Informasi Penjaminan Mutu Internal STIKOM El Rahma
 
 actor "Super Admin (LPM)" as SA
-actor "Anggota (Waket I-IV)" as AG
+actor "Anggota (Waket I-III)" as AG
 actor "Sistem (Timer)" as SYS
 
 rectangle "Sistem Informasi PPM" {
