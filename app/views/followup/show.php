@@ -187,7 +187,7 @@ $evidenceStatus = static function (string $s): string {
                             <?= format_date((string)$plan['revision_requested_at'], 'd M Y H:i') ?>
                             <br>Catatan: <?= e((string)$plan['revision_note']) ?>
                             <br><a href="<?= e(url('/documents/' . (int)$plan['revision_document_id'])) ?>">Buka halaman dokumen →</a>
-                            <span class="text-muted">(pemilik mengunggah versi baru → persetujuan → siklus berikutnya)</span>
+                            <span class="text-muted">(pemilik mengunggah versi baru → siklus berikutnya)</span>
                         </div>
                     <?php elseif ($isSuper && $plan['status'] !== 'verified'): ?>
                         <p class="text-muted small mb-0">
@@ -203,7 +203,7 @@ $evidenceStatus = static function (string $s): string {
                                     <option value="">— pilih dokumen —</option>
                                     <?php foreach ($documents as $d): ?>
                                         <option value="<?= (int)$d['id'] ?>">
-                                            <?= e($d['title']) ?> (v<?= e((string)$d['version']) ?> · <?= e($d['approval_status']) ?>)
+                                            <?= e($d['title']) ?> (v<?= e((string)$d['version']) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>

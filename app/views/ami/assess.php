@@ -3,7 +3,9 @@
  * M3 — Penilaian AMI per indikator: skor 0–4 + bukti + catatan temuan (FR-07).
  * Skor ≤ 2 wajib bercatatan → temuan tercatat otomatis (aktivitas Gambar 4.5).
  * @var array $assignment @var array $instruments @var array $values
- * @var array $findings @var bool $canEdit @var array $errors
+ * @var array $findings @var bool $canScore @var bool $canUpload @var array $errors
+ * $canScore  = Super Admin/auditor saat jadwal berjalan (skor + catatan temuan + bukti)
+ * $canUpload = auditee unit saat jadwal berjalan (hanya bukti — Item 4/foto-04)
  */
 $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invalid' : '';
 $scoreLabels = [
@@ -21,7 +23,8 @@ $statusBadge = match ($assignment['status']) {
 };
 $assessed = 0;
 foreach ($instruments as $i) {
-    if (isset($values[(int)$i['id']])) {
+    $v = $values[(int)$i['id']] ?? null;
+    if ($v !== null && $v['score'] !== null) {   // baris bukti auditee (score NULL) belum dinilai
         $assessed++;
     }
 }
@@ -45,13 +48,19 @@ foreach ($instruments as $i) {
     </div>
 </div>
 
-<?php if (!$canEdit): ?>
+<?php if ($canUpload && !$canScore): ?>
+    <!-- Item 4 (foto-04): auditee hanya mengunggah bukti; skor & catatan temuan auditor/LPM. -->
+    <div class="alert alert-info py-2">
+        Mode <strong>auditee</strong> — Anda dapat <strong>mengunggah bukti</strong> per indikator;
+        skor &amp; catatan temuan diisi <strong>auditor/LPM</strong>.
+    </div>
+<?php elseif (!$canScore): ?>
     <div class="alert alert-info py-2">
         Mode <strong>baca saja</strong> —
-        <?php if ((int)($assignment['auditor_user_id'] ?? 0) !== (int)Auth::id() && !Auth::isSuperAdmin()): ?>
-            Anda bukan auditor penugasan ini.
-        <?php else: ?>
+        <?php if ($assignment['schedule_status'] !== 'running'): ?>
             jadwal <strong><?= e((string)$assignment['schedule_status']) ?></strong> tidak sedang berjalan.
+        <?php else: ?>
+            Anda bukan auditor penugasan ini.
         <?php endif; ?>
         Penilaian hanya dapat diisi saat jadwal <strong>berjalan</strong> oleh auditor yang ditugaskan / LPM.
     </div>
@@ -91,7 +100,7 @@ foreach ($instruments as $i) {
             <?php foreach ($instruments as $inst):
                 $iid = (int)$inst['id'];
                 $v   = $values[$iid] ?? null;
-                $cur = $v !== null ? (int)$v['score'] : null;
+                $cur = $v !== null && $v['score'] !== null ? (int)$v['score'] : null;
                 ?>
                 <tr>
                     <td class="fw-semibold"><?= e($inst['code']) ?></td>
@@ -109,7 +118,7 @@ foreach ($instruments as $i) {
                     </td>
                     <td class="text-center"><?= number_format((float)$inst['weight'], 2, ',', '.') ?></td>
                     <td>
-                        <?php if ($canEdit): ?>
+                        <?php if ($canScore): ?>
                             <select name="scores[<?= $iid ?>]" class="form-select form-select-sm score-select">
                                 <option value="">— belum dinilai —</option>
                                 <?php foreach ($scoreLabels as $val => $label): ?>
@@ -124,7 +133,7 @@ foreach ($instruments as $i) {
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($canEdit): ?>
+                        <?php if ($canScore): ?>
                             <input type="text" name="notes[<?= $iid ?>]" class="form-control form-control-sm note-input"
                                    placeholder="wajib bila skor ≤ 2"
                                    value="<?= e((string)($v['finding_note'] ?? '')) ?>">
@@ -133,7 +142,7 @@ foreach ($instruments as $i) {
                         <?php endif; ?>
                     </td>
                     <td class="small">
-                        <?php if ($canEdit): ?>
+                        <?php if ($canScore || $canUpload): ?>
                             <?php if (!empty($v['evidence_file'])): ?>
                                 <div class="mb-1">
                                     <a href="<?= e(url('/ami/evidence/' . (int)$v['id'])) ?>" target="_blank">unduh bukti lama</a>
@@ -152,11 +161,18 @@ foreach ($instruments as $i) {
             </tbody>
         </table>
     </div>
-    <?php if ($canEdit): ?>
+    <?php if ($canScore): ?>
         <div class="card-body border-top">
             <button class="btn btn-primary" type="submit">Simpan penilaian</button>
             <span class="small text-muted ms-2">
                 Penilaian yang sudah disimpan dapat diperbarui selama jadwal berjalan; status penugasan diperbarui otomatis.
+            </span>
+        </div>
+    <?php elseif ($canUpload): ?>
+        <div class="card-body border-top">
+            <button class="btn btn-primary" type="submit">Unggah bukti</button>
+            <span class="small text-muted ms-2">
+                Bukti per indikator — skor &amp; catatan temuan menyusul diisi auditor/LPM.
             </span>
         </div>
     <?php endif; ?>
@@ -198,7 +214,7 @@ foreach ($instruments as $i) {
     </div>
 </div>
 
-<?php if ($canEdit): ?>
+<?php if ($canScore): ?>
 <script>
     // Skor ≤ 2 → catatan temuan wajib diisi (ditegaskan sebelum kirim).
     document.querySelector('form.assess-form')?.addEventListener('submit', function (ev) {

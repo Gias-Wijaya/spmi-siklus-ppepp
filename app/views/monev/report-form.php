@@ -85,7 +85,7 @@ $isSuper = Auth::isSuperAdmin();
                         </td>
                         <td>
                             <input type="text" name="notes[<?= $indId ?>]" class="form-control form-control-sm"
-                                   placeholder="opsional" value="<?= $current ? e($current['notes'] ?? '') : '' ?>">
+                                   placeholder="wajib saat diajukan" value="<?= $current ? e($current['notes'] ?? '') : '' ?>">
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -102,5 +102,6 @@ $isSuper = Auth::isSuperAdmin();
     <div class="text-muted small mb-4">
         Draf dapat disunting kapan saja selama periode terbuka; setelah diajukan, LPM akan mereview
         <?= $isSuper ? '(Anda dapat menyetujui/mengembalikan sebagai LPM).' : 'dan memberi kabar melalui notifikasi.' ?>
+        <br>Sebelum diajukan, <strong>seluruh indikator</strong> wajib lengkap: nilai aktual + bukti pendukung + catatan.
     </div>
 </form>

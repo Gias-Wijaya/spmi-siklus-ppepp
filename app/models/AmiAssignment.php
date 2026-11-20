@@ -11,7 +11,8 @@ final class AmiAssignment extends Model
         return Database::all(
             'SELECT a.*, u.name AS unit_name, u.code AS unit_code,
                     au.name AS auditor_name, al.name AS lead_name,
-                    (SELECT COUNT(*) FROM ami_assessments aa WHERE aa.assignment_id = a.id) AS assessed_count
+                    (SELECT COUNT(*) FROM ami_assessments aa
+                       WHERE aa.assignment_id = a.id AND aa.score IS NOT NULL) AS assessed_count
                FROM ami_assignments a
                JOIN units u ON u.id = a.unit_id
                LEFT JOIN users au ON au.id = a.auditor_user_id

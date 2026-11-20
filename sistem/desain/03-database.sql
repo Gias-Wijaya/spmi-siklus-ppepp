@@ -94,7 +94,7 @@ CREATE TABLE `notifications` (
   `user_id`    INT UNSIGNED NOT NULL,
   `title`      VARCHAR(150) NOT NULL,
   `message`    TEXT NOT NULL,
-  `type`       ENUM('persetujuan','tenggat','monev','dokumen','temuan','umum') NOT NULL DEFAULT 'umum',
+  `type`       ENUM('tenggat','monev','dokumen','temuan','umum') NOT NULL DEFAULT 'umum',
   `ref_table`  VARCHAR(64) NULL,
   `ref_id`     INT UNSIGNED NULL,
   `is_read`    TINYINT(1) NOT NULL DEFAULT 0,
@@ -105,7 +105,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
--- M1 — DOKUMEN SPMI  (masa berlaku + status hijau/kuning/merah + versi + approval)
+-- M1 — DOKUMEN SPMI  (masa berlaku + status hijau/kuning/merah + riwayat versi)
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE `document_categories` (
@@ -131,19 +131,15 @@ CREATE TABLE `documents` (
   `effective_date`  DATE NULL,                    -- tanggal mulai berlaku
   `expiry_date`     DATE NULL,                    -- MASA BERLAKU (kunci fitur M1)
   `file_path`       VARCHAR(255) NOT NULL,
-  `approval_status` ENUM('draft','submitted','approved','rejected','archived')
-                    NOT NULL DEFAULT 'draft',
   `status_color`    ENUM('green','yellow','red') NOT NULL DEFAULT 'green',  -- 🟢🟡🔴
   `description`     TEXT NULL,
-  `submitted_at`    DATETIME NULL,
-  `approved_at`     DATETIME NULL,
   `created_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_doc_category` (`category_id`),
   KEY `idx_doc_standard` (`standard_id`),
   KEY `idx_doc_unit` (`unit_id`),
-  KEY `idx_doc_status` (`approval_status`, `status_color`),
+  KEY `idx_doc_color` (`status_color`),
   KEY `idx_doc_expiry` (`expiry_date`),
   CONSTRAINT `fk_doc_cat` FOREIGN KEY (`category_id`) REFERENCES `document_categories` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_doc_std` FOREIGN KEY (`standard_id`) REFERENCES `standards` (`id`) ON DELETE SET NULL,
@@ -151,6 +147,8 @@ CREATE TABLE `documents` (
   CONSTRAINT `fk_doc_owner` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Riwayat versi: unggah versi baru tanpa alur persetujuan
+-- (pengesahan/TTD basah dilakukan di luar sistem).
 CREATE TABLE `document_versions` (
   `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `document_id`   INT UNSIGNED NOT NULL,
@@ -158,29 +156,11 @@ CREATE TABLE `document_versions` (
   `file_path`     VARCHAR(255) NOT NULL,
   `change_note`   TEXT NULL,
   `submitted_by`  INT UNSIGNED NULL,
-  `approved_by`   INT UNSIGNED NULL,
-  `status`        ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_dv_doc` (`document_id`),
   CONSTRAINT `fk_dv_doc` FOREIGN KEY (`document_id`) REFERENCES `documents` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_dv_sub` FOREIGN KEY (`submitted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_dv_app` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE `document_approvals` (
-  `id`               INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `document_id`      INT UNSIGNED NOT NULL,
-  `step`             TINYINT NOT NULL DEFAULT 1,
-  `approver_user_id` INT UNSIGNED NULL,
-  `status`           ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  `comment`          TEXT NULL,
-  `acted_at`         DATETIME NULL,
-  `created_at`       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_da_doc` (`document_id`),
-  CONSTRAINT `fk_da_doc` FOREIGN KEY (`document_id`) REFERENCES `documents` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_da_user` FOREIGN KEY (`approver_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_dv_sub` FOREIGN KEY (`submitted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------------------------------------------------------
@@ -321,7 +301,7 @@ CREATE TABLE `ami_assessments` (                  -- penilaian per indikator (sk
   `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `assignment_id` INT UNSIGNED NOT NULL,
   `instrument_id` INT UNSIGNED NOT NULL,
-  `score`         TINYINT NOT NULL DEFAULT 0,     -- 0,1,2,3,4
+  `score`         TINYINT NULL DEFAULT NULL,     -- 0,1,2,3,4; NULL = bukti terunggah, skor belum diisi auditor
   `evidence_file` VARCHAR(255) NULL,
   `finding_note`  TEXT NULL,
   `filled_by`     INT UNSIGNED NULL,
@@ -355,12 +335,14 @@ CREATE TABLE `ami_findings` (                     -- TEMUAN → bahan M4
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `satisfaction_surveys` (             -- FORMULIR KEPUSASAN
-  `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name`       VARCHAR(150) NOT NULL,
-  `start_date` DATE NULL,
-  `end_date`   DATE NULL,
-  `status`     ENUM('draft','open','closed') NOT NULL DEFAULT 'draft',
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name`         VARCHAR(150) NOT NULL,
+  `start_date`   DATE NULL,
+  `end_date`     DATE NULL,
+  `status`       ENUM('draft','open','closed') NOT NULL DEFAULT 'draft',
+  `guest_token`  VARCHAR(64) NULL DEFAULT NULL,    -- Item 12: tautan /puas/{token} (mode tamu)
+  `guest_enabled` TINYINT(1) NOT NULL DEFAULT 0,   -- 1 = tautan tamu aktif, 0 = dimatikan
+  `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -369,6 +351,7 @@ CREATE TABLE `satisfaction_questions` (
   `survey_id`  INT UNSIGNED NOT NULL,
   `question`   TEXT NOT NULL,
   `type`       ENUM('skala','pilihan','teks') NOT NULL DEFAULT 'skala',
+  `options`    VARCHAR(255) NULL DEFAULT NULL,      -- Item 11: opsi 'pilihan' dipisah '|' (mis. "Ya|Tidak")
   `weight`     DECIMAL(5,2) NOT NULL DEFAULT 1.00,
   `is_active`  TINYINT(1) NOT NULL DEFAULT 1,
   `sort_order` INT NOT NULL DEFAULT 0,
@@ -454,7 +437,6 @@ CREATE OR REPLACE VIEW `v_documents_status` AS
 SELECT
   d.*,
   CASE
-    WHEN d.approval_status = 'archived' THEN 'red'
     WHEN d.expiry_date IS NULL THEN 'green'
     WHEN d.expiry_date <  CURDATE() THEN 'red'
     WHEN d.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 'yellow'

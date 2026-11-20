@@ -31,7 +31,7 @@
 
 | Endpoint | Isi berkas | Akses |
 |---|---|---|
-| `GET /documents/export` | 12 kolom daftar dokumen + label warna/persetujuan Indonesia | Semua peran (anggota terbatas unitnya) |
+| `GET /documents/export` | 11 kolom daftar dokumen + label warna masa berlaku Indonesia | Semua peran (anggota terbatas unitnya) |
 | `GET /monev/export?period_id=` | Blok rekap per unit + blok rerata capaian per indikator | Semua peran |
 | `GET /ami/export?schedule_id=` | Blok skor per unit + rekap per standar + temuan audit | **Khusus Super Admin (403)** |
 | `GET /followup/export` | Rencana aksi lengkap (PIC, tenggat, bukti, verifikasi, dokumen revisi) | Super Admin semua; anggota hanya PIC-nya |
@@ -81,8 +81,10 @@ urutan suite dijalankan. Setelah suite iterasi 6 selesai:
 
 | Suite | Skrip | Hasil |
 |---|---|---|
-| Iterasi 3 — Monev | `iterasi-3-monev/test-monev.php` | LULUS 65/65 |
-| Iterasi 4 — AMI | `iterasi-4-ami/test-ami.php` | LULUS 162/162 |
+| Iterasi 3 — Monev | `iterasi-3-monev/test-monev.php` | LULUS 79/79 |
+| Iterasi 4 — AMI | `iterasi-4-ami/test-ami.php` | LULUS 223/223 |
 | Iterasi 5 — M4 | `iterasi-5-followup/test-followup.php` | LULUS 101/101 |
 | Iterasi 6 — M5 pelengkap | `iterasi-6/test-pelengkap.php` | LULUS 55/55 |
-| **Total** | | **LULUS 383/383** |
+| **Total** | | **LULUS 458/458** |
+
+*(Diperbarui 19 Nov 2026 setelah Revisi Review LPM — sebelumnya 383/383.)*

@@ -9,6 +9,12 @@ $questions      = $recap['questions'];
 $skalaQuestions = array_values(array_filter($questions, static fn ($q) => $q['type'] === 'skala' && $q['avg_score'] !== null));
 $chartLabels    = array_map(static fn ($q) => mb_substr((string)$q['question'], 0, 40), $skalaQuestions);
 $chartScores    = array_map(static fn ($q) => (float)$q['avg_score'], $skalaQuestions);
+$typeLabel      = static fn (string $t): string => match ($t) {
+    'skala'   => 'Skala 1–5',
+    'pilihan' => 'Pilihan',
+    'teks'    => 'Teks — isian singkat/feedback/saran',
+    default   => $t,
+};
 ?>
 
 <div class="page-head no-print">
@@ -99,7 +105,7 @@ $chartScores    = array_map(static fn ($q) => (float)$q['avg_score'], $skalaQues
                     <thead>
                     <tr>
                         <th>Pertanyaan</th>
-                        <th style="width:80px">Jenis</th>
+                        <th style="width:150px">Jenis</th>
                         <th class="text-center" style="width:70px">Jawaban</th>
                         <th class="text-center" style="width:130px">Rerata</th>
                     </tr>
@@ -111,7 +117,7 @@ $chartScores    = array_map(static fn ($q) => (float)$q['avg_score'], $skalaQues
                     <?php foreach ($questions as $q): ?>
                         <tr>
                             <td class="small"><?= e((string)$q['question']) ?></td>
-                            <td class="small"><?= e($q['type']) ?></td>
+                            <td class="small"><?= e($typeLabel((string)$q['type'])) ?></td>
                             <td class="text-center small"><?= (int)$q['answer_count'] ?></td>
                             <td class="text-center">
                                 <?php if ($q['type'] === 'skala'): ?>

@@ -18,11 +18,11 @@ final class SatisfactionResponse extends Model
     public static function forSurvey(int $surveyId): array
     {
         return Database::all(
-            'SELECT r.*, u.name AS respondent_name, u.email AS respondent_email
+            'SELECT r.*, COALESCE(u.name, "Tamu") AS respondent_name, u.email AS respondent_email
                FROM satisfaction_responses r
                LEFT JOIN users u ON u.id = r.respondent_user_id
               WHERE r.survey_id = ?
-              ORDER BY r.submitted_at DESC',
+              ORDER BY r.submitted_at DESC, r.id DESC',
             [$surveyId]
         );
     }

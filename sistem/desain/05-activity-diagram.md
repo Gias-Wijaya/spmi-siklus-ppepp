@@ -4,32 +4,17 @@
 
 ---
 
-## A. Alur Pengelolaan & Persetujuan Dokumen (M1) — mendukung tahap Penetapan
+## A. Alur Pengelolaan Dokumen (M1) — mendukung tahap Penetapan (tanpa alur persetujuan)
 
 ```plantuml
 @startuml
-title Aktivitas — Pengelolaan & Persetujuan Dokumen SPMI
+title Aktivitas — Pengelolaan Dokumen SPMI
 start
 :Anggota/Super Admin mengunggah dokumen
 (judul, nomor, kategori, versi, tanggal & masa berlaku);
-
-if (Peran pengguna?) then (Anggota)
-  :Ajukan dokumen untuk persetujuan;
-  :status = submitted;
-else (Super Admin)
-  :Simpan sebagai draft;
-endif
-
-:Super Admin meninjau dokumen;
-if (Disetujui?) then (Ya)
-  :status = approved;
-  :Dokumen berlaku;
-  :Notifikasi ke pengunggah;
-else (Tidak)
-  :status = rejected + komentar;
-  :Notifikasi revisi ke pengunggah;
-  stop
-endif
+:Dokumen tersimpan & langsung berlaku
+(status 🟢; versi tercatat di document_versions);
+:Notifikasi ke pengunggah;
 
 partition "Siklus masa berlaku (otomatis)" {
   :Sistem menghitung sisa hari;
@@ -45,7 +30,7 @@ partition "Siklus masa berlaku (otomatis)" {
 }
 
 :Revisi dilakukan → versi baru dicatat
-di document_versions;
+di document_versions (langsung aktif);
 stop
 @enduml
 ```
@@ -67,13 +52,20 @@ note right
 end note
 
 :Super Admin menetapkan jadwal & pasangan
-auditor–auditee per unit;
-:Anggota (auditor) mengumpulkan bukti
-(dokumen, wawancara, observasi);
+auditor (LPM)–auditee (waket) per unit;
+note right
+  Auditee = unit waket (W1–W3);
+  auditor wajib pengguna
+  unit LPM (Revisi Review LPM)
+end note
+:Auditee (waket) mengunggah bukti
+(dokumen, wawancara, observasi) per indikator;
 
 partition "Penilaian per indikator" {
-  :Auditor memberi skor 0–4
-  + unggah bukti + catatan;
+  :Bukti tercatat dengan skor kosong
+  (menunggu penilaian auditor);
+  :Auditor (LPM) memberi skor 0–4
+  + catatan penilaian;
   if (Tidak memenuhi standar?) then (Ya)
     :Mencatat TEMUAN
     (ketidaksesuaian/observasi/rekomendasi);
@@ -103,7 +95,7 @@ stop
 title Aktivitas — Pengendalian & Peningkatan (tindak lanjut berkelanjutan)
 start
 :Temuan dari M3 menjadi
-daftar rencana aksi;
+daftar rencana aksi (status = Terbuka);
 
 :Super Admin menetapkan deskripsi aksi,
 penanggung jawab (Waket terkait),
@@ -111,17 +103,20 @@ tenggat waktu, dan prioritas;
 :Notifikasi tugas ke penanggung jawab;
 
 partition "Pelaksanaan" {
-  :Penanggung jawab menyelesaikan perbaikan;
+  :Penanggung jawab memulai pelaksanaan
+  (status = Terbuka → Berjalan);
+  :Menyelesaikan perbaikan;
   :Mengunggah bukti penyelesaian;
-  :status = in_progress → done;
+  :status = Selesai (menunggu verifikasi);
 }
 
 if (Bukti diterima Super Admin?) then (Ya)
-  :status = verified;
+  :status = Terverifikasi;
   :Catatan verifikasi tersimpan;
 else (Tidak)
   :Bukti dikembalikan (rejected)
   + catatan perbaikan;
+  :status kembali Berjalan;
   :Kembali ke pelaksanaan;
 endif
 
@@ -134,7 +129,7 @@ else (Tidak)
 endif
 
 :Rekap tindak lanjut ditampilkan
-pada dasbor (terbuka/berproses/selesai/diverifikasi);
+pada dasbor (Terbuka/Berjalan/Selesai/Terverifikasi);
 stop
 @enduml
 ```

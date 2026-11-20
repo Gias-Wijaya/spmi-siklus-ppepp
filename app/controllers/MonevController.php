@@ -19,9 +19,30 @@ final class MonevController extends Controller
         $period = $periodId > 0 ? MonevPeriod::find($periodId) : null;
 
         $reports    = $period ? MonevReport::forPeriod($periodId) : [];
-        $indicators = $period ? MonevReport::indicatorAverages($periodId) : [];
+
+        // Filter unit tabel "Capaian per indikator" (keputusan review LPM 19 Nov).
+        $units = Unit::active();
+        $filterUnitId = (int)($_GET['unit_id'] ?? 0);
+        if ($filterUnitId > 0 && !array_filter($units, static fn (array $u) => (int)$u['id'] === $filterUnitId)) {
+            $filterUnitId = 0;
+        }
+        $indicators = $period
+            ? MonevReport::indicatorAverages($periodId, $filterUnitId > 0 ? $filterUnitId : null)
+            : [];
         $unitScores = $period ? MonevReport::unitScores($periodId) : [];
         $trend      = MonevReport::trendPerPeriod();
+
+        // Jumlah unit yang benar-benar mengisi → label "Rata-rata (n unit)".
+        $fillCount = 0;
+        if ($period) {
+            $fillCount = (int)Database::scalar(
+                'SELECT COUNT(DISTINCT r.unit_id)
+                   FROM monev_reports r
+                   JOIN monev_values v ON v.report_id = r.id
+                  WHERE r.period_id = ?' . ($filterUnitId > 0 ? ' AND r.unit_id = ?' : ''),
+                $filterUnitId > 0 ? [(int)$period['id'], $filterUnitId] : [(int)$period['id']]
+            );
+        }
 
         // Ringkasan periode terpilih.
         $scored = array_filter(
@@ -31,10 +52,12 @@ final class MonevController extends Controller
         $avg = $scored
             ? round(array_sum(array_map(static fn ($r) => (float)$r['total_score'], $scored)) / count($scored), 2)
             : null;
-        $below = count(array_filter(
-            $indicators,
+        // "Di bawah target" pada kartu ringkasan tetap lintas seluruh unit
+        // — filter unit hanya berlaku untuk tabel Capaian per indikator.
+        $below = $period ? count(array_filter(
+            MonevReport::indicatorAverages($periodId),
             static fn ($i) => $i['avg_ap'] !== null && (float)$i['avg_ap'] < 100
-        ));
+        )) : 0;
 
         // Data grafik (Chart.js).
         $chartTrend = [
@@ -52,6 +75,9 @@ final class MonevController extends Controller
             'period'     => $period,
             'reports'    => $reports,
             'indicators' => $indicators,
+            'units'      => $units,
+            'filterUnitId' => $filterUnitId,
+            'fillCount'  => $fillCount,
             'trend'      => $trend,
             'avg'        => $avg,
             'below'      => $below,
@@ -341,6 +367,7 @@ final class MonevController extends Controller
 
     public function report(): void
     {
+        $this->noStore();
         $periodId = (int)($_GET['period_id'] ?? 0);
         $unitId   = (int)($_GET['unit_id'] ?? 0);
 
@@ -400,7 +427,6 @@ final class MonevController extends Controller
         $rawNotes   = is_array($_POST['notes'] ?? null) ? $_POST['notes'] : [];
 
         // Validasi nilai harus angka.
-        $hasValue = false;
         foreach ($indicators as $indicator) {
             $indId = (int)$indicator['id'];
             $raw   = trim((string)($rawValues[$indId] ?? ''));
@@ -408,14 +434,59 @@ final class MonevController extends Controller
                 flash('danger', 'Nilai indikator ' . $indicator['code'] . ' harus berupa angka.');
                 $this->redirect('/monev/report?period_id=' . $periodId . '&unit_id=' . $unitId);
             }
-            if ($raw !== '') {
-                $hasValue = true;
-            }
         }
 
-        if ($action === 'submit' && !$hasValue) {
-            flash('danger', 'Minimal satu indikator harus diisi sebelum diajukan.');
-            $this->redirect('/monev/report?period_id=' . $periodId . '&unit_id=' . $unitId);
+        // Review LPM foto-02: sebelum diajukan, SETIAP indikator wajib lengkap —
+        // nilai aktual + bukti pendukung + catatan (bukan sekadar "minimal satu").
+        if ($action === 'submit') {
+            if (!$indicators) {
+                flash('danger', 'Belum ada indikator aktif — laporan tidak dapat diajukan.');
+                $this->redirect('/monev/report?period_id=' . $periodId . '&unit_id=' . $unitId);
+            }
+
+            $priorReport = MonevReport::findPair($periodId, $unitId);
+            $savedValues = $priorReport
+                ? MonevValue::forReport((int)$priorReport['id'])
+                : [];
+            $savedByInd  = [];
+            foreach ($savedValues as $sv) {
+                $savedByInd[(int)$sv['indicator_id']] = $sv;
+            }
+
+            $incomplete = [];
+            foreach ($indicators as $indicator) {
+                $indId = (int)$indicator['id'];
+                $raw   = trim((string)($rawValues[$indId] ?? ''));
+                $note  = trim((string)($rawNotes[$indId] ?? ''));
+
+                // Bukti: berkas baru diunggah ATAU bukti tersimpan dari isian sebelumnya.
+                $hasNewFile = isset($_FILES['evidence']['error'][$indId])
+                    && (int)$_FILES['evidence']['error'][$indId] !== UPLOAD_ERR_NO_FILE;
+                $hasEvidence = $hasNewFile || !empty($savedByInd[$indId]['evidence_file'] ?? null);
+                // Catatan: isian baru ATAU catatan tersimpan dari simpan sebelumnya.
+                $hasNote = $note !== ''
+                    || trim((string)($savedByInd[$indId]['notes'] ?? '')) !== '';
+
+                $lacks = [];
+                if ($raw === '') {
+                    $lacks[] = 'nilai';
+                }
+                if (!$hasEvidence) {
+                    $lacks[] = 'bukti';
+                }
+                if (!$hasNote) {
+                    $lacks[] = 'catatan';
+                }
+                if ($lacks) {
+                    $incomplete[] = $indicator['code'] . ' (' . implode(', ', $lacks) . ')';
+                }
+            }
+
+            if ($incomplete) {
+                flash('danger', 'Seluruh indikator wajib lengkap sebelum diajukan — belum terpenuhi: '
+                    . implode('; ', $incomplete) . '.');
+                $this->redirect('/monev/report?period_id=' . $periodId . '&unit_id=' . $unitId);
+            }
         }
 
         // Buat laporan bila belum ada; tolak ubah bila sudah disetujui.
@@ -492,6 +563,15 @@ final class MonevController extends Controller
                 'submitted_at' => date('Y-m-d H:i:s'),
             ]);
 
+            // Review LPM foto-05: notifikasi "menunggu review" maksimal 1 per laporan —
+            // pengajuan ulang mengganti notifikasi lama, bukan menambah.
+            Database::stmt(
+                "DELETE FROM notifications
+                  WHERE ref_table = 'monev_reports' AND ref_id = ?
+                    AND title = 'Laporan Monev menunggu review'",
+                [$reportId]
+            );
+
             $this->notifySuperAdmins(
                 'Laporan Monev menunggu review',
                 'Laporan Monev "' . $period['name'] . '" unit "' . $unit['name'] . '" diajukan oleh '
@@ -515,6 +595,7 @@ final class MonevController extends Controller
 
     public function showReport(string $id): void
     {
+        $this->noStore();
         $report = MonevReport::detail((int)$id);
         if (!$report) {
             $this->notFound('Laporan tidak ditemukan.');
@@ -627,6 +708,14 @@ final class MonevController extends Controller
     }
 
     /* ------------------------------------------------------------- Utilitas */
+
+    /** Anti-cache: tombol back memaksa GET ulang sehingga formulir/laporan menampilkan
+     *  data tersimpan terkini (review LPM foto-14 — pola PRG sudah dipakai saveReport). */
+    private function noStore(): void
+    {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+    }
 
     /** Anggota hanya boleh mengisi laporan unitnya sendiri. */
     private function guardUnitAccess(int $unitId): void

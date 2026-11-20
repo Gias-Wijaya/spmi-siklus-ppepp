@@ -39,16 +39,22 @@ final class AmiController extends Controller
                 $unitScores
             ),
         ];
-        $chartStd = [
-            'labels' => array_map(
-                static fn ($s) => $s['standard_code'] ?? 'Tanpa standar',
-                $standardRows
-            ),
-            'scores' => array_map(
-                static fn ($s) => $s['avg_score'] !== null ? (float)$s['avg_score'] : null,
-                $standardRows
-            ),
-        ];
+        // Item 5 — sumbu lengkap seluruh standar (bukan hanya yang berinstrumen),
+        // skor rata-rata skala 0–4 tanpa "gap"; null = standar belum dinilai.
+        $stdById = [];
+        foreach ($standardRows as $s) {
+            if ($s['standard_id'] !== null) {
+                $stdById[(int)$s['standard_id']] = $s;
+            }
+        }
+        $chartStd = ['labels' => [], 'scores' => []];
+        foreach (Standard::active() as $s) {
+            $row = $stdById[(int)$s['id']] ?? null;
+            $chartStd['labels'][] = $s['code'];
+            $chartStd['scores'][] = $row !== null && $row['avg_score'] !== null
+                ? (float)$row['avg_score']
+                : null;
+        }
 
         $this->view('ami/index', [
             'title'         => 'Dasbor AMI',
@@ -375,6 +381,21 @@ final class AmiController extends Controller
 
     /* ========================================== Penugasan auditor (FR-07) */
 
+    /** ID unit LPM — auditee tidak boleh LPM; auditor wajib berasal dari unit ini (Item 8). */
+    private function lpmUnitId(): int
+    {
+        return (int)Database::scalar("SELECT id FROM units WHERE code = 'LPM' ORDER BY id LIMIT 1");
+    }
+
+    /** Daftar pengguna LPM — satu-satunya kandidat auditor AMI (Item 8). */
+    private function lpmUsers(): array
+    {
+        return Database::all(
+            'SELECT id, name FROM users WHERE is_active = 1 AND unit_id = ? ORDER BY name',
+            [$this->lpmUnitId()]
+        );
+    }
+
     public function assignments(): void
     {
         $this->requireSuperAdmin();
@@ -398,11 +419,14 @@ final class AmiController extends Controller
             'schedule'      => $schedule,
             'assignments'   => $assignments,
             'findingCounts' => $findingCounts,
+            // Item 8 (foto-08): auditee hanya unit waket (W1–W3) — LPM tidak menjadi auditee.
             'freeUnits'     => array_values(array_filter(
                 Unit::active(),
-                static fn ($u) => !in_array((int)$u['id'], $assignedUnitIds, true)
+                static fn ($u) => strtoupper((string)$u['code']) !== 'LPM'
+                    && !in_array((int)$u['id'], $assignedUnitIds, true)
             )),
             'users'        => Database::all('SELECT id, name FROM users WHERE is_active = 1 ORDER BY name'),
+            'auditorUsers' => $this->lpmUsers(),
             'errors'       => [],
         ]);
     }
@@ -422,11 +446,27 @@ final class AmiController extends Controller
         }
 
         $unitId = (int)($_POST['unit_id'] ?? 0);
+        $unit   = $unitId > 0 ? Unit::find($unitId) : null;
         $errors = [];
-        if ($unitId <= 0 || !Unit::find($unitId)) {
+        if (!$unit) {
             $errors['unit_id'] = 'Unit kerja wajib dipilih.';
+        } elseif (strtoupper((string)$unit['code']) === 'LPM') {
+            // Item 8 (foto-08): auditee = unit waket (W1–W3); LPM bertindak sebagai auditor.
+            $errors['unit_id'] = 'Auditee harus unit kerja waket (W1–W3) — LPM ditolak sebagai auditee.';
         } elseif (AmiAssignment::unitExists((int)$schedule['id'], $unitId)) {
             $errors['unit_id'] = 'Unit tersebut sudah ditugaskan pada jadwal ini.';
+        }
+
+        // Item 8: auditor wajib & berasal dari unit LPM.
+        $auditor = (int)($_POST['auditor_user_id'] ?? 0);
+        if ($auditor <= 0) {
+            $errors['auditor_user_id'] = 'Auditor wajib ditetapkan — auditor AMI berasal dari LPM.';
+        } else {
+            $auditorUser = User::find($auditor);
+            if (!$auditorUser || (int)$auditorUser['is_active'] !== 1
+                || (int)$auditorUser['unit_id'] !== $this->lpmUnitId()) {
+                $errors['auditor_user_id'] = 'Auditor harus pengguna aktif pada unit LPM.';
+            }
         }
 
         if ($errors) {
@@ -434,9 +474,8 @@ final class AmiController extends Controller
             $this->redirect('/ami/assignments?schedule_id=' . (int)$schedule['id']);
         }
 
-        $auditor = (int)($_POST['auditor_user_id'] ?? 0);
-        $lead    = (int)($_POST['auditee_lead_user_id'] ?? 0);
-        $date    = trim((string)($_POST['audit_date'] ?? ''));
+        $lead = (int)($_POST['auditee_lead_user_id'] ?? 0);
+        $date = trim((string)($_POST['audit_date'] ?? ''));
 
         $id = AmiAssignment::create([
             'schedule_id'          => (int)$schedule['id'],
@@ -475,6 +514,7 @@ final class AmiController extends Controller
             'title'      => 'Edit Penugasan AMI',
             'assignment' => $assignment,
             'users'      => Database::all('SELECT id, name FROM users WHERE is_active = 1 ORDER BY name'),
+            'auditorUsers' => $this->lpmUsers(),
         ]);
     }
 
@@ -491,13 +531,25 @@ final class AmiController extends Controller
             $this->redirect('/ami/assignments?schedule_id=' . (int)$assignment['schedule_id']);
         }
 
+        // Item 8: auditor wajib & berasal dari unit LPM (baik saat buat maupun edit).
         $auditor = (int)($_POST['auditor_user_id'] ?? 0);
+        if ($auditor <= 0) {
+            flash('danger', 'Auditor wajib ditetapkan — auditor AMI berasal dari LPM.');
+            $this->redirect('/ami/assignments/' . (int)$id . '/edit');
+        }
+        $auditorUser = User::find($auditor);
+        if (!$auditorUser || (int)$auditorUser['is_active'] !== 1
+            || (int)$auditorUser['unit_id'] !== $this->lpmUnitId()) {
+            flash('danger', 'Auditor harus pengguna aktif pada unit LPM.');
+            $this->redirect('/ami/assignments/' . (int)$id . '/edit');
+        }
+
         $lead    = (int)($_POST['auditee_lead_user_id'] ?? 0);
         $date    = trim((string)($_POST['audit_date'] ?? ''));
         $number  = trim((string)($_POST['report_number'] ?? ''));
 
         AmiAssignment::updateById((int)$id, [
-            'auditor_user_id'      => $auditor > 0 ? $auditor : null,
+            'auditor_user_id'      => $auditor,
             'auditee_lead_user_id' => $lead > 0 ? $lead : null,
             'audit_date'           => $date !== '' ? $date : null,
             'report_number'        => $number !== '' ? $number : null,
@@ -536,12 +588,17 @@ final class AmiController extends Controller
             $this->notFound('Penugasan tidak ditemukan.');
         }
 
-        $canEdit = Auth::isSuperAdmin()
+        // Item 4 (foto-04): auditor/superadmin mengisi skor & catatan temuan;
+        // auditee (unit auditee) hanya mengunggah bukti per indikator.
+        $isAuditor = Auth::isSuperAdmin()
             || (int)($assignment['auditor_user_id'] ?? 0) === (int)Auth::id();
-        $canView = $canEdit || (int)$assignment['unit_id'] === (int)Auth::unitId();
-        if (!$canView) {
+        $isAuditee = (int)$assignment['unit_id'] === (int)Auth::unitId();
+        if (!$isAuditor && !$isAuditee) {
             $this->forbidden();
         }
+        $running   = $assignment['schedule_status'] === 'running';
+        $canScore  = $isAuditor && $running;
+        $canUpload = $isAuditee && $running;
 
         $instruments = AmiInstrument::forSchedule((int)$assignment['schedule_id'], true);
         $values      = [];
@@ -555,7 +612,8 @@ final class AmiController extends Controller
             'instruments' => $instruments,
             'values'      => $values,
             'findings'    => Finding::forAssignment((int)$id),
-            'canEdit'     => $canEdit && $assignment['schedule_status'] === 'running',
+            'canScore'    => $canScore,
+            'canUpload'   => $canUpload,
             'errors'      => [],
         ]);
     }
@@ -566,7 +624,10 @@ final class AmiController extends Controller
         if (!$assignment) {
             $this->notFound('Penugasan tidak ditemukan.');
         }
-        if (!Auth::isSuperAdmin() && (int)($assignment['auditor_user_id'] ?? 0) !== (int)Auth::id()) {
+        $isAuditor = Auth::isSuperAdmin()
+            || (int)($assignment['auditor_user_id'] ?? 0) === (int)Auth::id();
+        $isAuditee = (int)$assignment['unit_id'] === (int)Auth::unitId();
+        if (!$isAuditor && !$isAuditee) {
             $this->forbidden();
         }
         if ($assignment['schedule_status'] !== 'running') {
@@ -578,6 +639,57 @@ final class AmiController extends Controller
         $notes  = is_array($_POST['notes'] ?? null) ? $_POST['notes'] : [];
 
         $instruments = AmiInstrument::forSchedule((int)$assignment['schedule_id'], true);
+
+        // Item 4 (foto-04): auditee HANYA mengunggah bukti per indikator —
+        // skor & catatan temuan milik Super Admin/auditor (tolak keras bila dikirim).
+        if (!$isAuditor) {
+            foreach ($scores as $raw) {
+                if (trim((string)$raw) !== '') {
+                    $this->forbidden();
+                }
+            }
+            $uploaded = 0;
+            foreach ($instruments as $inst) {
+                $instId   = (int)$inst['id'];
+                $evidence = $this->uploadEvidence($instId);
+                if (isset($evidence['error'])) {
+                    flash('danger', $evidence['error']);
+                    $this->redirect('/ami/assignments/' . (int)$id . '/assess');
+                }
+                if (!isset($evidence['path'])) {
+                    continue;
+                }
+                $existing = AmiAssessment::findPair((int)$id, $instId);
+                $payload  = [
+                    'evidence_file' => $evidence['path'],
+                    'filled_by'     => Auth::id(),
+                    'filled_at'     => date('Y-m-d H:i:s'),
+                ];
+                if ($existing) {
+                    if (!empty($existing['evidence_file'])) {
+                        delete_upload($existing['evidence_file']);
+                    }
+                    AmiAssessment::updateById((int)$existing['id'], $payload);
+                } else {
+                    $payload['assignment_id'] = (int)$id;
+                    $payload['instrument_id'] = $instId;
+                    $payload['score']         = null;   // bukti auditee — belum dinilai auditor
+                    AmiAssessment::create($payload);
+                }
+                $uploaded++;
+            }
+            if ($uploaded === 0) {
+                flash('warning', 'Tidak ada berkas dipilih — pilih berkas bukti indikator untuk diunggah.');
+                $this->redirect('/ami/assignments/' . (int)$id . '/assess');
+            }
+            audit('upload_evidence', 'ami_assignments', (int)$id, [
+                'unit'  => $assignment['unit_name'],
+                'bukti' => $uploaded,
+            ]);
+            flash('success', $uploaded . ' bukti terunggah — menunggu skor dari auditor/LPM.');
+            $this->redirect('/ami/assignments/' . (int)$id . '/assess');
+        }
+
         $saved       = 0;
         $findingsMade = 0;
 
@@ -661,7 +773,8 @@ final class AmiController extends Controller
         $activeIds = array_map('intval', array_column($instruments, 'id'));
         $assessedActive = 0;
         foreach (AmiAssessment::forAssignment((int)$id) as $a) {
-            if (in_array((int)$a['instrument_id'], $activeIds, true)) {
+            // Baris bukti auditee (score NULL, Item 4) belum dihitung sebagai dinilai.
+            if ($a['score'] !== null && in_array((int)$a['instrument_id'], $activeIds, true)) {
                 $assessedActive++;
             }
         }
@@ -1138,6 +1251,15 @@ final class AmiController extends Controller
         if ($weight <= 0) {
             $errors['weight'] = 'Bobot harus lebih besar dari 0.';
         }
+
+        // Item 11 — jenis pilihan wajib punya daftar opsi (dipisah '|').
+        $options = null;
+        if ($type === 'pilihan') {
+            $options = SatisfactionQuestion::parseOptions((string)($_POST['options'] ?? ''));
+            if ($options === null) {
+                $errors['options'] = 'Opsi pilihan wajib diisi minimal 2 — pisahkan tiap opsi dengan " | ".';
+            }
+        }
         if ($errors) {
             flash('danger', implode(' ', array_values($errors)));
             $this->redirect('/ami/satisfaction/' . (int)$id . '/questions');
@@ -1147,6 +1269,7 @@ final class AmiController extends Controller
             'survey_id'  => (int)$id,
             'question'   => $question,
             'type'       => $type,
+            'options'    => $options !== null ? implode('|', $options) : null,
             'weight'     => $weight,
             'is_active'  => 1,
             'sort_order' => $sort,
@@ -1184,12 +1307,28 @@ final class AmiController extends Controller
             $type = 'skala';
         }
 
-        SatisfactionQuestion::updateById((int)$id, [
+        // Item 11 — opsi pilihan: divalidasi bila dikirim (form Tambah);
+        // tanpa kiriman (baris ubah) opsi lama dipertahankan; selain pilihan → kosong.
+        $payload = [
             'question'   => $text,
             'type'       => $type,
             'weight'     => $weight,
             'sort_order' => $sort,
-        ]);
+        ];
+        if ($type === 'pilihan') {
+            if (array_key_exists('options', $_POST)) {
+                $parsed = SatisfactionQuestion::parseOptions((string)$_POST['options']);
+                if ($parsed === null) {
+                    flash('danger', 'Opsi pilihan wajib diisi minimal 2 — pisahkan tiap opsi dengan " | ".');
+                    $this->redirect('/ami/satisfaction/' . (int)$question['survey_id'] . '/questions');
+                }
+                $payload['options'] = implode('|', $parsed);
+            }
+        } else {
+            $payload['options'] = null;
+        }
+
+        SatisfactionQuestion::updateById((int)$id, $payload);
         audit('update', 'satisfaction_questions', (int)$id, []);
         flash('success', 'Pertanyaan diperbarui.');
         $this->redirect('/ami/satisfaction/' . (int)$question['survey_id'] . '/questions');
@@ -1273,6 +1412,18 @@ final class AmiController extends Controller
             }
         }
 
+        // Item 11 — pertanyaan pilihan wajib dipilih salah satu opsi yang tersedia.
+        foreach ($questions as $q) {
+            if ($q['type'] !== 'pilihan') {
+                continue;
+            }
+            $val  = trim((string)($answers[(int)$q['id']] ?? ''));
+            if ($val === '' || !in_array($val, SatisfactionQuestion::optionsOf($q), true)) {
+                flash('danger', 'Semua pertanyaan pilihan wajib dipilih salah satu opsi.');
+                $this->redirect('/ami/satisfaction/' . (int)$id . '/fill');
+            }
+        }
+
         $responseId = SatisfactionResponse::create([
             'survey_id'         => (int)$id,
             'respondent_user_id' => Auth::id(),
@@ -1312,6 +1463,120 @@ final class AmiController extends Controller
             'recap'      => $recap,
             'respondents'=> SatisfactionResponse::forSurvey((int)$id),
         ]);
+    }
+
+    /* --------------------------------------------- Mode tamu /puas/{token} (Item 12) */
+
+    /**
+     * Aktifkan/nonaktifkan tautan tamu (Super Admin). Token dibuat saat pertama
+     * diaktifkan; `guest_enabled = 0` menonaktifkan tautan tanpa menghapus token.
+     */
+    public function toggleGuest(string $id): void
+    {
+        $this->requireSuperAdmin();
+
+        $survey = SatisfactionSurvey::find((int)$id);
+        if (!$survey) {
+            $this->notFound('Formulir kepuasan tidak ditemukan.');
+        }
+
+        if ((int)$survey['guest_enabled'] === 1) {
+            SatisfactionSurvey::updateById((int)$id, ['guest_enabled' => 0]);
+            audit('update', 'satisfaction_surveys', (int)$id, ['guest_enabled' => 0]);
+            flash('warning', 'Tautan tamu dinonaktifkan — responden tanpa akun tidak dapat mengisi.');
+            $this->redirect('/ami/satisfaction');
+        }
+
+        $token = (string)$survey['guest_token'];
+        if ($token === '') {
+            $token = SatisfactionSurvey::newGuestToken();
+        }
+        SatisfactionSurvey::updateById((int)$id, ['guest_token' => $token, 'guest_enabled' => 1]);
+        audit('update', 'satisfaction_surveys', (int)$id, ['guest_enabled' => 1]);
+        flash('success', 'Tautan tamu aktif — bagikan ke responden: ' . url('/puas/' . $token));
+        $this->redirect('/ami/satisfaction');
+    }
+
+    /** Halaman isi responden tamu (publik, tanpa akun). */
+    public function guestFill(string $token): void
+    {
+        $survey = SatisfactionSurvey::findByGuestToken($token);
+        if (!$survey) {
+            $this->notFound('Tautan formulir kepuasan tidak ditemukan.');
+        }
+
+        $this->view('ami/satisfaction-guest', [
+            'title'      => 'Isi Formulir Kepuasan (Tamu)',
+            'survey'     => $survey,
+            'questions'  => SatisfactionQuestion::activeForSurvey((int)$survey['id']),
+            'done'       => !empty($_SESSION['guest_done_' . (int)$survey['id']]),
+            'layout'     => 'layouts/auth',
+        ]);
+    }
+
+    /** Kirim jawaban tamu — respons tanpa akun (`respondent_user_id` NULL → "Tamu"). */
+    public function submitGuestFill(string $token): void
+    {
+        $survey = SatisfactionSurvey::findByGuestToken($token);
+        if (!$survey) {
+            $this->notFound('Tautan formulir kepuasan tidak ditemukan.');
+        }
+        if ((int)$survey['guest_enabled'] !== 1) {
+            flash('warning', 'Tautan tamu sudah dinonaktifkan.');
+            $this->redirect('/puas/' . $token);
+        }
+        if ($survey['status'] !== 'open') {
+            flash('warning', 'Formulir sudah ditutup.');
+            $this->redirect('/puas/' . $token);
+        }
+
+        // Satu respons tamu per sesi perangkat (pengganti "satu jawaban per pengguna").
+        $doneKey = 'guest_done_' . (int)$survey['id'];
+        if (!empty($_SESSION[$doneKey])) {
+            flash('info', 'Terima kasih — jawaban Anda sudah kami terima.');
+            $this->redirect('/puas/' . $token);
+        }
+
+        $questions = SatisfactionQuestion::activeForSurvey((int)$survey['id']);
+        $answers   = is_array($_POST['answers'] ?? null) ? $_POST['answers'] : [];
+
+        foreach ($questions as $q) {
+            $val = trim((string)($answers[(int)$q['id']] ?? ''));
+            if ($q['type'] === 'skala' && ($val === '' || !in_array($val, ['1', '2', '3', '4', '5'], true))) {
+                flash('danger', 'Semua pertanyaan skala wajib dijawab dengan nilai 1–5.');
+                $this->redirect('/puas/' . $token);
+            }
+            if ($q['type'] === 'pilihan'
+                && ($val === '' || !in_array($val, SatisfactionQuestion::optionsOf($q), true))) {
+                flash('danger', 'Semua pertanyaan pilihan wajib dipilih salah satu opsi.');
+                $this->redirect('/puas/' . $token);
+            }
+        }
+
+        $responseId = SatisfactionResponse::create([
+            'survey_id'          => (int)$survey['id'],
+            'respondent_user_id' => null,   // Item 12: tanpa akun → responden "Tamu"
+            'submitted_at'       => date('Y-m-d H:i:s'),
+        ]);
+
+        foreach ($questions as $q) {
+            $qid = (int)$q['id'];
+            $val = trim((string)($answers[$qid] ?? ''));
+            if ($val === '') {
+                continue;
+            }
+            SatisfactionAnswer::create([
+                'response_id' => $responseId,
+                'question_id' => $qid,
+                'score'       => $q['type'] === 'skala' ? (float)$val : null,
+                'answer_text' => $q['type'] === 'skala' ? null : mb_substr($val, 0, 2000),
+            ]);
+        }
+
+        $_SESSION[$doneKey] = 1;
+        audit('create', 'satisfaction_responses', $responseId, ['survey' => $survey['name'], 'responden' => 'Tamu']);
+        flash('success', 'Terima kasih — jawaban Anda tersimpan.');
+        $this->redirect('/puas/' . $token);
     }
 
     /* =============================================================== Utilitas */

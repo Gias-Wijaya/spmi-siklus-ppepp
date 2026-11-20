@@ -30,6 +30,22 @@ final class SatisfactionSurvey extends Model
         return (int)($row['n'] ?? 0) > 0;
     }
 
+    /** Item 12 — cari formulir lewat tautan tamu /puas/{token}. */
+    public static function findByGuestToken(string $token): ?array
+    {
+        if ($token === '') {
+            return null;
+        }
+        $row = Database::fetch('SELECT * FROM satisfaction_surveys WHERE guest_token = ?', [$token]);
+        return $row ?: null;
+    }
+
+    /** Item 12 — token acak (40 karakter hex) untuk tautan tamu. */
+    public static function newGuestToken(): string
+    {
+        return bin2hex(random_bytes(20));
+    }
+
     /**
      * Rekap otomatis (FR-08): rerata per pertanyaan (skala 1–5),
      * rerata tertimbang keseluruhan, dan kutipan jawaban teks.
@@ -71,7 +87,8 @@ final class SatisfactionSurvey extends Model
         $overallPct   = $overallScore !== null ? round($overallScore / 5 * 100, 1) : null;
 
         $texts = Database::all(
-            'SELECT q.question, a.answer_text, r.submitted_at, u.name AS respondent_name
+            'SELECT q.question, q.type, a.answer_text, r.submitted_at,
+                    COALESCE(u.name, "Tamu") AS respondent_name
                FROM satisfaction_answers a
                JOIN satisfaction_questions q ON q.id = a.question_id
                JOIN satisfaction_responses r ON r.id = a.response_id

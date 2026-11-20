@@ -81,7 +81,20 @@ $statusBadge = static function (string $status): string {
                         <?php endif; ?>
                         <?php foreach ($surveys as $s): ?>
                             <tr>
-                                <td class="small"><strong><?= e($s['name']) ?></strong></td>
+                                <td class="small">
+                                    <strong><?= e($s['name']) ?></strong>
+                                    <?php if ((int)$s['guest_enabled'] === 1 && !empty($s['guest_token'])): ?>
+                                        <!-- Item 12 — tautan mode tamu aktif: siap disalin. -->
+                                        <div class="input-group input-group-sm mt-1">
+                                            <input class="form-control form-control-sm" readonly
+                                                   value="<?= e(url('/puas/' . $s['guest_token'])) ?>">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.textContent='Tersalin';">
+                                                Salin
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="small text-muted">
                                     <?= $s['start_date'] ? format_date($s['start_date']) : '—' ?> –
                                     <?= $s['end_date'] ? format_date($s['end_date']) : '—' ?>
@@ -90,6 +103,13 @@ $statusBadge = static function (string $status): string {
                                 <td class="text-center"><?= (int)$s['question_count'] ?></td>
                                 <td class="text-center"><?= (int)$s['response_count'] ?></td>
                                 <td class="text-end text-nowrap">
+                                    <form method="post" action="<?= e(url('/ami/satisfaction/' . (int)$s['id'] . '/guest-toggle')) ?>" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <button class="btn btn-sm <?= (int)$s['guest_enabled'] === 1 ? 'btn-outline-warning' : 'btn-outline-info' ?>" type="submit"
+                                                title="<?= (int)$s['guest_enabled'] === 1 ? 'Nonaktifkan tautan tamu' : 'Aktifkan tautan tamu (responden tanpa akun)' ?>">
+                                            <i class="bi bi-person-plus me-1"></i><?= (int)$s['guest_enabled'] === 1 ? 'Tamu aktif' : 'Tamu' ?>
+                                        </button>
+                                    </form>
                                     <form method="post" action="<?= e(url('/ami/satisfaction/' . (int)$s['id'] . '/toggle')) ?>" class="d-inline">
                                         <?= csrf_field() ?>
                                         <button class="btn btn-sm <?= $s['status'] === 'open' ? 'btn-outline-secondary' : 'btn-outline-success' ?>" type="submit">

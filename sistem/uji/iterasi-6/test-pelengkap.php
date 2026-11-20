@@ -197,8 +197,8 @@ ok(str_contains($r['body'], 'SOP Evaluasi Dosen') && !str_contains($r['body'], '
 $escTitle = 'Uji Escaping; "Kutip" FR-14';
 $pdo->prepare(
     "INSERT INTO documents (title, doc_number, version, unit_id, owner_user_id, file_path,
-                            effective_date, expiry_date, approval_status, status_color)
-     VALUES (?, 'FR14/ESC/2026', '1.0', 1, 1, 'uji/fr14-escaping.pdf', '2026-01-01', ?, 'approved', 'green')"
+                            effective_date, expiry_date, status_color)
+     VALUES (?, 'FR14/ESC/2026', '1.0', 1, 1, 'uji/fr14-escaping.pdf', '2026-01-01', ?, 'green')"
 )->execute([$escTitle, date('Y-m-d', strtotime('+10 days'))]);
 $docEsc = (int)$pdo->lastInsertId();
 
@@ -329,9 +329,9 @@ ok($cnt1 === 1 && $cnt2 === 1, 'pemuatan halaman berulang tidak menggandakan not
 
 // Dokumen kedaluwarsa — pemilik (anggota) + LPM.
 $pdo->prepare("INSERT INTO documents (title, doc_number, version, unit_id, owner_user_id, file_path,
-                                      effective_date, expiry_date, approval_status, status_color)
+                                      effective_date, expiry_date, status_color)
                VALUES ('Uji Dokumen Kedaluwarsa FR15', 'FR15/EXP/2026', '1.0', 2, 2,
-                       'uji/fr15-expired.pdf', '2025-01-01', ?, 'approved', 'green')")
+                       'uji/fr15-expired.pdf', '2025-01-01', ?, 'green')")
     ->execute([date('Y-m-d', strtotime('-3 days'))]);
 $docExp = (int)$pdo->lastInsertId();
 

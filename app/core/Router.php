@@ -10,6 +10,9 @@ final class Router
     private const PUBLIC_ROUTES = [
         'AuthController@showLogin',
         'AuthController@login',
+        // Item 12 — mode tamu: isi formulir kepuasan tanpa akun (/puas/{token}).
+        'AmiController@guestFill',
+        'AmiController@submitGuestFill',
     ];
 
     public function get(string $path, string $handler): void

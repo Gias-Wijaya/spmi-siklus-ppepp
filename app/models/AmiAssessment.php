@@ -30,13 +30,15 @@ final class AmiAssessment extends Model
     }
 
     /** Skor tertimbang per unit: Σ(skor×bobot) ÷ Σ(bobot) atas indikator yang sudah dinilai. */
+    /** Skor per unit: hanya indikator yang benar-benar dinilai (score NOT NULL) dihitung. */
     public static function unitScores(int $scheduleId): array
     {
         return Database::all(
             'SELECT a.id AS assignment_id, a.status, a.audit_date,
                     u.name AS unit_name, au.name AS auditor_name,
-                    COUNT(aa.id) AS assessed_count,
-                    ROUND(SUM(aa.score * i.weight) / NULLIF(SUM(i.weight), 0), 2) AS avg_score
+                    COUNT(aa.score) AS assessed_count,
+                    ROUND(SUM(aa.score * i.weight)
+                        / NULLIF(SUM(CASE WHEN aa.score IS NOT NULL THEN i.weight END), 0), 2) AS avg_score
                FROM ami_assignments a
                JOIN units u ON u.id = a.unit_id
                LEFT JOIN users au ON au.id = a.auditor_user_id
@@ -49,13 +51,17 @@ final class AmiAssessment extends Model
         );
     }
 
-    /** Rerata skor per standar + selisih (gap) dari skor penuh 4. */
+    /**
+     * Rerata skor per standar + selisih (gap) dari skor penuh 4.
+     * Baris dengan score NULL (bukti auditee, belum dinilai) diperlakukan belum dinilai.
+     */
     public static function standardScores(int $scheduleId): array
     {
         $rows = Database::all(
             'SELECT s.id AS standard_id, s.code AS standard_code, s.name AS standard_name,
-                    COUNT(aa.id) AS assessed_count,
-                    ROUND(SUM(aa.score * i.weight) / NULLIF(SUM(i.weight), 0), 2) AS avg_score
+                    COUNT(aa.score) AS assessed_count,
+                    ROUND(SUM(aa.score * i.weight)
+                        / NULLIF(SUM(CASE WHEN aa.score IS NOT NULL THEN i.weight END), 0), 2) AS avg_score
                FROM ami_instruments i
                LEFT JOIN standards s ON s.id = i.standard_id
                LEFT JOIN ami_assessments aa ON aa.instrument_id = i.id
@@ -77,7 +83,7 @@ final class AmiAssessment extends Model
     {
         return Database::all(
             'SELECT i.id, i.code, i.question, i.weight, i.standard_id, s.name AS standard_name,
-                    COUNT(aa.id) AS assessed_count, ROUND(AVG(aa.score), 2) AS avg_score
+                    COUNT(aa.score) AS assessed_count, ROUND(AVG(aa.score), 2) AS avg_score
                FROM ami_instruments i
                LEFT JOIN standards s ON s.id = i.standard_id
                LEFT JOIN ami_assessments aa ON aa.instrument_id = i.id
@@ -96,7 +102,7 @@ final class AmiAssessment extends Model
                     (SELECT COUNT(*) FROM ami_assessments aa
                        JOIN ami_assignments a ON a.id = aa.assignment_id
                        JOIN ami_instruments i ON i.id = aa.instrument_id AND i.is_active = 1
-                      WHERE a.schedule_id = ?) AS assessed',
+                      WHERE a.schedule_id = ? AND aa.score IS NOT NULL) AS assessed',
             [$scheduleId, $scheduleId, $scheduleId]
         );
         $total = (int)$row['assignments'] * (int)$row['indicators'];

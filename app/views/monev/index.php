@@ -4,6 +4,7 @@
  * @var array $periods @var array|null $period @var array $reports @var array $indicators
  * @var array $trend @var float|null $avg @var int $below
  * @var array $chartTrend @var array $chartUnits @var array $counts @var array $errors
+ * @var array $units @var int $filterUnitId @var int $fillCount
  */
 $isSuper = Auth::isSuperAdmin();
 $ownUnit = (int)Auth::unitId();
@@ -28,6 +29,14 @@ $filledCount = count(array_filter($reports, static fn ($r) => $r['report_id'] !=
             </select>
             <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
         </form>
+        <?php if ($isSuper): ?>
+            <!-- Review LPM foto-13: tombol selalu tampil, bukan hanya saat indikator kosong. -->
+            <a class="btn btn-sm btn-outline-primary"
+               href="<?= e(url('/monev/indicators')) ?>"
+               title="Tambah, ubah, dan nonaktifkan indikator Monev">
+                <i class="bi bi-sliders me-1"></i>Kelola Indikator
+            </a>
+        <?php endif; ?>
         <?php if ($period): ?>
             <a class="btn btn-sm btn-outline-success"
                href="<?= e(url('/monev/export?period_id=' . (int)$period['id'])) ?>"
@@ -168,7 +177,22 @@ $filledCount = count(array_filter($reports, static fn ($r) => $r['report_id'] !=
 
 <!-- Capaian per indikator -->
 <div class="card table-card">
-    <div class="card-header bg-white"><strong>Capaian per indikator — <?= $period ? e($period['name']) : '-' ?></strong></div>
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <strong>Capaian per indikator — <?= $period ? e($period['name']) : '-' ?></strong>
+        <!-- Review LPM foto-07: filter unit + label rata-rata (n unit). -->
+        <form method="get" action="<?= e(url('/monev')) ?>" class="d-flex gap-2">
+            <input type="hidden" name="period_id" value="<?= $period ? (int)$period['id'] : 0 ?>">
+            <select class="form-select form-select-sm" name="unit_id" title="Tampilkan rata-rata untuk satu unit tertentu">
+                <option value="0">Semua unit</option>
+                <?php foreach ($units as $u): ?>
+                    <option value="<?= (int)$u['id'] ?>" <?= $filterUnitId === (int)$u['id'] ? 'selected' : '' ?>>
+                        <?= e($u['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
+        </form>
+    </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -176,7 +200,7 @@ $filledCount = count(array_filter($reports, static fn ($r) => $r['report_id'] !=
                 <th>Kode</th>
                 <th>Indikator</th>
                 <th class="text-end">Target</th>
-                <th class="text-center">Rata-rata</th>
+                <th class="text-center">Rata-rata (<?= (int)$fillCount ?> unit)</th>
                 <th class="text-center">Pengisi</th>
                 <th>Capaian</th>
             </tr>

@@ -2,6 +2,7 @@
 /**
  * M3 — Form edit penugasan AMI: auditor, ketua auditee, tanggal audit, nomor laporan.
  * @var array $assignment @var array $users @var array $periods
+ * @var array $auditorUsers
  */
 $locked = $assignment['schedule_status'] === 'closed';
 ?>
@@ -31,20 +32,24 @@ $locked = $assignment['schedule_status'] === 'closed';
         <form method="post" action="<?= e(url('/ami/assignments/' . (int)$assignment['id'])) ?>">
             <?= csrf_field() ?>
             <div class="mb-3">
-                <label class="form-label">Unit kerja (auditee)</label>
+                <label class="form-label">Unit kerja (auditee — waket)</label>
                 <input type="text" class="form-control" value="<?= e((string)$assignment['unit_name']) ?>" disabled>
             </div>
             <div class="mb-3">
-                <label class="form-label">Auditor</label>
-                <select name="auditor_user_id" class="form-select">
-                    <option value="0">— belum ditetapkan —</option>
-                    <?php foreach ($users as $u): ?>
-                        <option value="<?= (int)$u['id'] ?>" <?= (int)($assignment['auditor_user_id'] ?? 0) === (int)$u['id'] ? 'selected' : '' ?>>
-                            <?= e($u['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="form-text">Auditor diambil dari pengguna aktif — ditugaskan oleh LPM, bukan role terpisah.</div>
+                <label class="form-label">Auditor <span class="text-danger">*</span></label>
+                <?php if (!$auditorUsers): ?>
+                    <div class="text-muted small">Belum ada pengguna aktif pada unit LPM.</div>
+                <?php else: ?>
+                    <!-- Item 8 (foto-08): auditor hanya pengguna unit LPM. -->
+                    <select name="auditor_user_id" class="form-select">
+                        <?php foreach ($auditorUsers as $u): ?>
+                            <option value="<?= (int)$u['id'] ?>" <?= (int)($assignment['auditor_user_id'] ?? 0) === (int)$u['id'] ? 'selected' : '' ?>>
+                                <?= e($u['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="form-text">Auditor AMI berasal dari unit LPM — ditugaskan oleh LPM, bukan role terpisah.</div>
+                <?php endif; ?>
             </div>
             <div class="mb-3">
                 <label class="form-label">Ketua auditee (lead unit)</label>

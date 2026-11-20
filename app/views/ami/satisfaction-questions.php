@@ -7,7 +7,7 @@ $locked = $survey['status'] === 'closed';
 $typeLabel = static fn (string $t): string => match ($t) {
     'skala'   => 'Skala 1–5',
     'pilihan' => 'Pilihan',
-    'teks'    => 'Teks bebas',
+    'teks'    => 'Teks — isian singkat/feedback/saran',
     default   => $t,
 };
 ?>
@@ -16,8 +16,9 @@ $typeLabel = static fn (string $t): string => match ($t) {
     <div class="page-desc">
         <i class="bi bi-question-circle me-1"></i>
         <strong>Pertanyaan: <?= e((string)$survey['name']) ?></strong>, status
-        <?= e((string)$survey['status']) ?> · pertanyaan <strong>skala 1–5</strong> dinilai &amp;
-        diringkas otomatis; <strong>teks bebas</strong> dikumpulkan sebagai masukan kualitatif.
+        <?= e((string)$survey['status']) ?> · tiga jenis tersedia: <strong>skala 1–5</strong> dinilai &amp;
+        diringkas otomatis; <strong>pilihan</strong> memilih salah satu opsi (mis. Ya|Tidak);
+        <strong>Teks — isian singkat/feedback/saran</strong> dikumpulkan sebagai masukan kualitatif.
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami/satisfaction')) ?>">
@@ -54,9 +55,11 @@ $typeLabel = static fn (string $t): string => match ($t) {
                         <div class="row">
                             <div class="col-6 mb-2">
                                 <label class="form-label">Jenis</label>
+                                <!-- Item 11 — tiga jenis lengkap dengan label jelas. -->
                                 <select name="type" class="form-select">
                                     <option value="skala">Skala 1–5</option>
-                                    <option value="teks">Teks bebas</option>
+                                    <option value="pilihan">Pilihan</option>
+                                    <option value="teks">Teks — isian singkat/feedback/saran</option>
                                 </select>
                             </div>
                             <div class="col-3 mb-2">
@@ -68,8 +71,26 @@ $typeLabel = static fn (string $t): string => match ($t) {
                                 <input type="number" name="sort_order" class="form-control" value="<?= (int)count($questions) ?>">
                             </div>
                         </div>
+                        <div class="mb-2" id="optsBox" style="display:none">
+                            <label class="form-label">Opsi pilihan</label>
+                            <input type="text" name="options" class="form-control" value="Ya|Tidak" placeholder="Ya|Tidak">
+                            <div class="form-text">Pisahkan tiap opsi dengan <code>|</code> — minimal 2 opsi (khusus jenis Pilihan).</div>
+                        </div>
                         <button class="btn btn-primary w-100 mt-1" type="submit">Tambah</button>
                     </form>
+                    <script>
+                        (function () {
+                            var box = document.getElementById('optsBox');
+                            if (!box) return;
+                            var sync = function (sel) { box.style.display = sel && sel.value === 'pilihan' ? '' : 'none'; };
+                            var card = box.closest('form');
+                            var sel = card ? card.querySelector('select[name="type"]') : null;
+                            if (sel) {
+                                sel.addEventListener('change', function () { sync(sel); });
+                                sync(sel);
+                            }
+                        })();
+                    </script>
                 <?php endif; ?>
             </div>
         </div>

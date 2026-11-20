@@ -107,20 +107,26 @@ $totalAnswers = array_sum(array_map(static fn ($s) => (int)$s['response_count'],
         <div class="card h-100">
             <div class="card-header bg-white"><strong>Skor per unit — <?= $schedule ? e($schedule['name']) : '-' ?></strong></div>
             <div class="card-body">
-                <canvas id="chartUnits" height="220"></canvas>
-                <?php if (!$chartUnits['labels']): ?>
+                <?php $unitHasScore = array_filter($chartUnits['scores'], static fn ($v) => $v !== null); ?>
+                <?php if ($chartUnits['labels'] && $unitHasScore): ?>
+                    <canvas id="chartUnits" height="220"></canvas>
+                <?php elseif (!$chartUnits['labels']): ?>
                     <div class="text-muted small">Belum ada penugasan unit.</div>
+                <?php else: ?>
+                    <div class="text-muted small">Belum ada penilaian.</div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
     <div class="col-lg-6">
         <div class="card h-100">
-            <div class="card-header bg-white"><strong>Skor per standar (gap dari skor penuh 4)</strong></div>
+            <div class="card-header bg-white"><strong>Skor per standar — rata-rata (skala 0–4)</strong></div>
             <div class="card-body">
-                <canvas id="chartStd" height="220"></canvas>
-                <?php if (!$chartStd['labels']): ?>
-                    <div class="text-muted small">Belum ada data penilaian.</div>
+                <?php $stdHasScore = array_filter($chartStd['scores'], static fn ($v) => $v !== null); ?>
+                <?php if ($stdHasScore): ?>
+                    <canvas id="chartStd" height="220"></canvas>
+                <?php else: ?>
+                    <div class="text-muted small">Belum ada penilaian.</div>
                 <?php endif; ?>
             </div>
         </div>
@@ -250,8 +256,9 @@ $totalAnswers = array_sum(array_map(static fn ($s) => (int)$s['response_count'],
     const stdData  = <?= json_encode($chartStd, JSON_UNESCAPED_UNICODE) ?>;
     const lampu = v => v >= 3 ? '#198754' : (v >= 2 ? '#ffc107' : '#dc3545');
 
-    if (unitData.labels.length) {
-        new Chart(document.getElementById('chartUnits'), {
+    const elUnits = document.getElementById('chartUnits');
+    if (elUnits) {
+        new Chart(elUnits, {
             type: 'bar',
             data: {
                 labels: unitData.labels,
@@ -268,8 +275,9 @@ $totalAnswers = array_sum(array_map(static fn ($s) => (int)$s['response_count'],
         });
     }
 
-    if (stdData.labels.length) {
-        new Chart(document.getElementById('chartStd'), {
+    const elStd = document.getElementById('chartStd');
+    if (elStd) {
+        new Chart(elStd, {
             type: 'bar',
             data: {
                 labels: stdData.labels,

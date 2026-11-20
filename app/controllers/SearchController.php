@@ -20,7 +20,7 @@ final class SearchController extends Controller
             $like = '%' . $q . '%';
 
             $docs = Database::all(
-                "SELECT d.id, d.title, d.doc_number, d.version, d.approval_status,
+                "SELECT d.id, d.title, d.doc_number, d.version,
                         d.status_color, d.expiry_date, c.name AS category_name
                    FROM documents d
                    LEFT JOIN document_categories c ON c.id = d.category_id

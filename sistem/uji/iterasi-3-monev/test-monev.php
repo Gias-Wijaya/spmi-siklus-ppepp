@@ -63,6 +63,26 @@ final class Client
         ];
     }
 
+    /** Permintaan GET beserta blok header (untuk menguji Cache-Control: no-store). */
+    public function getRaw(string $path): array
+    {
+        curl_setopt($this->ch, CURLOPT_URL, $this->base . $path);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS, null);
+        curl_setopt($this->ch, CURLOPT_HTTPGET, true);
+        curl_setopt($this->ch, CURLOPT_HEADER, true);
+        $raw  = curl_exec($this->ch);
+        $code = (int)curl_getinfo($this->ch, CURLINFO_RESPONSE_CODE);
+        $size = (int)curl_getinfo($this->ch, CURLINFO_HEADER_SIZE);
+        curl_setopt($this->ch, CURLOPT_HEADER, false);
+
+        return [
+            'code'    => $code,
+            'headers' => substr((string)$raw, 0, $size),
+            'body'    => substr((string)$raw, $size),
+            'url'     => (string)curl_getinfo($this->ch, CURLINFO_EFFECTIVE_URL),
+        ];
+    }
+
     public function post(string $path, array $fields = [], array $files = []): array
     {
         $data = $fields;
@@ -145,6 +165,9 @@ echo "\n=== B. Halaman & RBAC ===\n";
 $r = $admin->get('/monev');
 ok($r['code'] === 200 && str_contains($r['body'], 'Dasbor Monev'), 'dasbor Monev terbuka (FR-05)');
 ok(str_contains($r['body'], 'Tren rata-rata capaian antarperiode'), 'panel grafik tren tampil');
+ok(str_contains($r['body'], 'Kelola Indikator'), 'tombol "Kelola Indikator" permanen — tidak hanya saat indikator kosong (foto-13)');
+ok(str_contains($r['body'], 'Rata-rata ('), 'label "Rata-rata (n unit)" pada tabel capaian indikator (foto-07)');
+ok(str_contains($r['body'], 'Semua unit'), 'dropdown filter unit tersedia pada tabel capaian indikator (foto-07)');
 
 $r = $admin->get('/monev/periods');
 ok($r['code'] === 200 && str_contains($r['body'], 'Kelola Periode Monev'), 'halaman periode terbuka (Super Admin)');
@@ -233,6 +256,8 @@ ok(str_contains($r['body'], 'sudah dipakai'), 'kode indikator ganda ditolak');
 echo "\n=== E. Isian capaian unit (FR-04) — Super Admin ===\n";
 $r = $admin->get('/monev/report?period_id=1&unit_id=1');
 ok($r['code'] === 200 && str_contains($r['body'], 'Isi Capaian Monev'), 'formulir isian terbuka');
+$r = $admin->getRaw('/monev/report?period_id=1&unit_id=1');
+ok(str_contains($r['headers'], 'Cache-Control: no-store'), 'formulir Monev memakai Cache-Control: no-store (foto-14)');
 
 $r = $admin->post('/monev/report', [
     '_token'    => $admin->token(),
@@ -254,14 +279,47 @@ ok($sum !== null && (float)$sum['total_score'] === 96.0, 'skor total tertimbang 
 $ev = row($pdo, 'SELECT v.evidence_file FROM monev_values v WHERE v.report_id = ? AND v.indicator_id = 1', [$adminReport]);
 ok($ev !== null && $ev['evidence_file'] !== null, 'bukti unggahan tersimpan');
 
+// Pengajuan sebagian (hanya 2 indikator, tanpa bukti/catatan) wajib ditolak (foto-02).
 $r = $admin->post('/monev/report', [
     '_token'    => $admin->token(),
     'period_id' => '1',
     'unit_id'   => '1',
     'submit'    => '1',
 ] + flat('values', ['1' => '90', '2' => '80']));
-ok(str_contains($r['body'], 'diajukan untuk direview'), 'laporan diajukan untuk review');
+ok(str_contains($r['body'], 'wajib lengkap sebelum diajukan'),
+    'pengajuan tanpa kelengkapan ditolak — setiap indikator wajib nilai+bukti+catatan (foto-02)');
+ok(val($pdo, 'SELECT status FROM monev_reports WHERE id = ?', [$adminReport]) === 'draft',
+    'laporan tetap draf setelah pengajuan ditolak');
+
+// Pengajuan lengkap: seluruh indikator aktif (termasuk IND-99) + bukti + catatan.
+$k = (string)$ind99;
+$r = $admin->post('/monev/report', [
+    '_token'    => $admin->token(),
+    'period_id' => '1',
+    'unit_id'   => '1',
+    'submit'    => '1',
+] + flat('values', ['1' => '90', '2' => '80', '3' => '90', '4' => '100', $k => '72'])
+  + flat('notes', [
+        '1' => 'Data dari laporan triwulan',
+        '2' => 'Ketuntasan 80% tercapai',
+        '3' => 'Dosen bergelar magister 90%',
+        '4' => 'Laporan disetujui tepat waktu',
+        $k  => 'Melebihi target — capaian dibatasi 100%',
+    ]),
+    ['evidence[1]' => $bukti, 'evidence[2]' => $bukti, 'evidence[3]' => $bukti,
+     'evidence[4]' => $bukti, 'evidence[' . $ind99 . ']' => $bukti]);
+ok(str_contains($r['body'], 'diajukan untuk direview'), 'laporan lengkap diajukan untuk review');
 ok(val($pdo, 'SELECT status FROM monev_reports WHERE id = ?', [$adminReport]) === 'submitted', 'status = menunggu review');
+
+// Cap 100% (foto-03): 90/80 = 112,5% dan 72/60 = 120% tidak boleh tampil sebagai capaian penuh.
+$cap = row($pdo, 'SELECT r.total_score,
+                          (SELECT achievement_percent FROM monev_values WHERE report_id = r.id AND indicator_id = 3) AS ap3,
+                          (SELECT achievement_percent FROM monev_values WHERE report_id = r.id AND indicator_id = ?) AS apx
+                   FROM monev_reports r WHERE r.id = ?', [$ind99, $adminReport]);
+ok($cap !== null && (float)$cap['ap3'] === 100.0, 'capaian 112,5% (nilai 90 / target 80) dibatasi 100% (foto-03)');
+ok($cap !== null && (float)$cap['apx'] === 100.0, 'capaian 120% (nilai 72 / target 60) dibatasi 100% — kasus persis review');
+ok($cap !== null && (float)$cap['total_score'] === 98.46,
+    'skor total tertimbang = 98,46% ((90+150+100+100+200) / 6,5) — tetap ≤ 100%');
 
 echo "\n=== F. Unduh bukti ===\n";
 $evId = (int)val($pdo, 'SELECT id FROM monev_values WHERE report_id = ? AND indicator_id = 1', [$adminReport]);
@@ -278,8 +336,13 @@ ok(str_contains($r['body'], 'menunggu review') || str_contains($r['body'], 'tida
 
 echo "\n=== H. Dasbor menampilkan skor ===\n";
 $r = $admin->get('/monev?period_id=1');
-ok(str_contains($r['body'], '96,0%'), 'skor 96% tampil di dasbor');
+ok(str_contains($r['body'], '98,5%'), 'skor 98,5% tampil di dasbor (hasil capaian dibatasi 100%)');
 ok(str_contains($r['body'], 'Monev 2026-1'), 'periode seed tampil pada pemilih periode');
+$r = $admin->getRaw('/monev/reports/' . $adminReport);
+ok(str_contains($r['headers'], 'Cache-Control: no-store'), 'halaman detail laporan memakai Cache-Control: no-store (foto-14)');
+$r = $admin->get('/monev?period_id=1&unit_id=2');
+ok(str_contains($r['body'], 'Rata-rata (0 unit)'),
+    'filter unit bekerja — unit yang belum mengisi menampilkan "Rata-rata (0 unit)" (foto-07)');
 
 echo "\n=== I. RBAC anggota (Waket I, unit 2) ===\n";
 $r = $member->post('/login', ['_token' => $member->token(), 'email' => 'waket1@stikomelrahma.ac.id', 'password' => 'waket123']);
@@ -300,16 +363,30 @@ ok($r['code'] === 403, 'anggota ditolak mengisi Monev unit lain (403)');
 $r = $member->get('/monev/report?period_id=1&unit_id=2');
 ok($r['code'] === 200 && str_contains($r['body'], 'Isi Capaian Monev'), 'anggota dapat mengisi Monev unitnya sendiri');
 
+$k = (string)$ind99;
 $r = $member->post('/monev/report', [
     '_token'    => $member->token(),
     'period_id' => '1',
     'unit_id'   => '2',
     'submit'    => '1',
-] + flat('values', ['1' => '100', '2' => '80', '3' => '80', '4' => '100']));
+] + flat('values', ['1' => '100', '2' => '80', '3' => '80', '4' => '100', $k => '60'])
+  + flat('notes', [
+        '1' => 'Sesuai RPS berjalan',
+        '2' => 'Ketuntasan 80% tercapai',
+        '3' => 'Seluruh dosen bergelar magister',
+        '4' => 'Laporan tepat waktu',
+        $k  => 'Tepat pada target',
+    ]),
+    ['evidence[1]' => $bukti, 'evidence[2]' => $bukti, 'evidence[3]' => $bukti,
+     'evidence[4]' => $bukti, 'evidence[' . $ind99 . ']' => $bukti]);
 ok((bool)preg_match('#/monev/reports/(\d+)#', $r['url'], $m2), 'laporan anggota tersimpan & diajukan');
 $memberReport = (int)($m2[1] ?? 0);
 ok(val($pdo, 'SELECT status FROM monev_reports WHERE id = ?', [$memberReport]) === 'submitted', 'laporan anggota = menunggu review');
 ok((float)val($pdo, 'SELECT total_score FROM monev_reports WHERE id = ?', [$memberReport]) === 100.0, 'skor anggota = 100% (semua indikator tepat target)');
+ok((int)val($pdo, "SELECT COUNT(*) FROM notifications
+                    WHERE ref_table = 'monev_reports' AND ref_id = ?
+                      AND title = 'Laporan Monev menunggu review'", [$memberReport]) === 1,
+    'notifikasi "menunggu review" tersimpan tepat 1 kali (foto-05)');
 
 $r = $member->get("/monev/reports/{$adminReport}");
 ok($r['code'] === 200 && str_contains($r['body'], 'Rincian capaian indikator'), 'anggota dapat melihat laporan lain (transparansi)');
@@ -339,8 +416,14 @@ $r = $member->post('/monev/report', [
     'period_id' => '1',
     'unit_id'   => '2',
     'submit'    => '1',
-] + flat('values', ['1' => '100', '2' => '80', '3' => '88', '4' => '100']));
+] + flat('values', ['1' => '100', '2' => '80', '3' => '88', '4' => '100', (string)$ind99 => '60']));
 ok(val($pdo, 'SELECT status FROM monev_reports WHERE id = ?', [$memberReport]) === 'submitted', 'perbaikan dapat diajukan ulang');
+ok((int)val($pdo, "SELECT COUNT(*) FROM notifications
+                    WHERE ref_table = 'monev_reports' AND ref_id = ?
+                      AND title = 'Laporan Monev menunggu review'", [$memberReport]) === 1,
+    'pengajuan ulang mengganti notifikasi lama — tetap 1 per laporan (foto-05)');
+ok((float)val($pdo, 'SELECT total_score FROM monev_reports WHERE id = ?', [$memberReport]) === 100.0,
+    'skor total tetap 100% — capaian indikator 3 (88/80 = 110%) dibatasi 100% (foto-03)');
 
 echo "\n=== K. Periode tertutup mengunci isian ===\n";
 $r = $admin->post("/monev/periods/{$period3}/toggle", ['_token' => $admin->token()]); // tutup

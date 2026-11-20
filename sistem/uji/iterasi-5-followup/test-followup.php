@@ -146,7 +146,7 @@ file_put_contents($dokRevisi, "%PDF-1.4\n% uji revisi dokumen M4\n%%EOF\n");
 $baseline = [];
 foreach ([
     'ami_assignments', 'ami_findings', 'action_plans', 'action_evidence',
-    'documents', 'document_versions', 'document_approvals', 'notifications',
+    'documents', 'document_versions', 'notifications',
 ] as $t) {
     $baseline[$t] = (int)val($pdo, "SELECT COUNT(*) FROM {$t}");
 }
@@ -188,7 +188,8 @@ ok($sid > 0, 'jadwal AMI berjalan tersedia sebagai wadah temuan');
 
 $admin->post('/ami/assignments', [
     '_token' => $admin->token(), 'schedule_id' => (string)$sid, 'unit_id' => '3',
-    'auditor_user_id' => '2', 'audit_date' => '2027-04-01',
+    // Item 8: auditor wajib berasal dari unit LPM (user 1 = Super Admin/LPM).
+    'auditor_user_id' => '1', 'audit_date' => '2027-04-01',
 ]);
 $aid = (int)val($pdo, 'SELECT id FROM ami_assignments WHERE schedule_id = ? AND unit_id = ?', [$sid, 3]);
 ok($aid > 0, 'penugasan unit W2 dibuat sebagai wadah temuan uji');
@@ -381,8 +382,8 @@ ok(str_contains($r['body'], 'Terverifikasi') && str_contains($r['body'], 'Bukti 
     'status & catatan verifikasi tampil di halaman rencana');
 
 echo "\n=== F. Umpan balik revisi dokumen (FR-12) ===\n";
-$pdo->exec("INSERT INTO documents (title, doc_number, version, file_path, approval_status, owner_user_id, unit_id, effective_date, expiry_date)
-             VALUES ('Dokumen Uji M4', 'UJI/M4/2027', '1.0', 'dokumen/uji-m4.pdf', 'approved', 2, 2, '2026-01-01', '2027-12-31')");
+$pdo->exec("INSERT INTO documents (title, doc_number, version, file_path, owner_user_id, unit_id, effective_date, expiry_date)
+             VALUES ('Dokumen Uji M4', 'UJI/M4/2027', '1.0', 'dokumen/uji-m4.pdf', 2, 2, '2026-01-01', '2027-12-31')");
 $docId = (int)$pdo->lastInsertId();
 ok($docId > 0, 'dokumen uji disiapkan (pemilik = pengguna anggota)');
 
@@ -433,8 +434,9 @@ $r = $member->post("/documents/{$docId}/revise", [
 ], ['file' => $dokRevisi]);
 ok(str_contains($r['body'], 'Dokumen Uji M4'), 'pemilik membuka halaman dokumen setelah revisi');
 ok((string)val($pdo, 'SELECT version FROM documents WHERE id = ?', [$docId]) === '1.1', 'dokumen naik ke versi 1.1 (revisi M1)');
-ok((string)val($pdo, 'SELECT approval_status FROM documents WHERE id = ?', [$docId]) === 'submitted',
-    'dokumen masuk antrean persetujuan → memasuki siklus Penetapan berikutnya');
+ok((string)val($pdo, 'SELECT file_path FROM documents WHERE id = ?', [$docId])
+    === (string)val($pdo, 'SELECT file_path FROM document_versions WHERE document_id = ?', [$docId]),
+    'versi baru langsung aktif pada dokumen (pengesahan TTD basah di luar sistem)');
 ok((int)val($pdo, 'SELECT COUNT(*) FROM document_versions WHERE document_id = ?', [$docId]) === 1,
     'versi dokumen tercatat pada document_versions');
 
@@ -481,7 +483,7 @@ $verFiles   = $pdo->query('SELECT file_path FROM document_versions WHERE documen
 if ($aid > 0) {
     $pdo->exec("DELETE FROM ami_assignments WHERE id = {$aid}"); // cascade: temuan → rencana aksi → bukti
 }
-$pdo->exec("DELETE FROM documents WHERE id = {$docId}");          // cascade: versi & persetujuan
+$pdo->exec("DELETE FROM documents WHERE id = {$docId}");          // cascade: riwayat versi
 $pdo->exec("DELETE FROM notifications WHERE ref_table IN ('action_plans', 'ami_findings', 'ami_assignments')
               OR (ref_table = 'documents' AND ref_id = {$docId})");
 $pdo->exec("DELETE FROM audit_logs WHERE table_name IN ('action_plans', 'action_evidence')

@@ -72,9 +72,15 @@ final class MonevReport extends Model
         );
     }
 
-    /** Rata-rata capaian per indikator pada satu periode + penanda di bawah target (FR-05). */
-    public static function indicatorAverages(int $periodId): array
+    /**
+     * Rata-rata capaian per indikator pada satu periode + penanda di bawah target (FR-05).
+     * $unitId diisi → hanya laporan satu unit (filter tabel dasbor, keputusan review LPM).
+     */
+    public static function indicatorAverages(int $periodId, ?int $unitId = null): array
     {
+        $unitSql = $unitId !== null ? ' AND r.unit_id = ?' : '';
+        $params  = $unitId !== null ? [$periodId, $unitId] : [$periodId];
+
         return Database::all(
             "SELECT i.id, i.code, i.name, i.unit_of_measure, i.target, i.weight,
                     ROUND(AVG(t.ap), 2) AS avg_ap,
@@ -84,19 +90,20 @@ final class MonevReport extends Model
                    SELECT v.indicator_id, v.achievement_percent AS ap, v.report_id
                      FROM monev_values v
                      JOIN monev_reports r ON r.id = v.report_id
-                    WHERE r.period_id = ?
+                    WHERE r.period_id = ?{$unitSql}
                ) t ON t.indicator_id = i.id
               WHERE i.is_active = 1
               GROUP BY i.id
               ORDER BY i.code ASC",
-            [$periodId]
+            $params
         );
     }
 
     /**
      * Hitung ulang capaian tiap indikator dan skor total laporan.
-     * achievement_percent = nilai / target × 100 (tanpa batas).
-     * total_score = rerata tertimbang seluruh indikator terisi.
+     * achievement_percent = nilai / target × 100, dibatasi maksimum 100%
+     * (review LPM foto-03 — capaian 120% tidak boleh tampil hijau).
+     * total_score = rerata tertimbang seluruh indikator terisi (juga ≤ 100).
      */
     public static function recalculate(int $reportId): void
     {
@@ -117,6 +124,9 @@ final class MonevReport extends Model
             $value  = (float)$row['value'];
 
             $achievement = $target > 0 ? round(($value / $target) * 100, 2) : 0.0;
+            if ($achievement > 100) {
+                $achievement = 100.0;
+            }
             Database::update(
                 'monev_values',
                 ['achievement_percent' => $achievement],
@@ -129,6 +139,9 @@ final class MonevReport extends Model
         }
 
         $total = $weightTotal > 0 ? round($weightedSum / $weightTotal, 2) : null;
+        if ($total !== null && $total > 100) {
+            $total = 100.0;
+        }
 
         Database::update(
             'monev_reports',

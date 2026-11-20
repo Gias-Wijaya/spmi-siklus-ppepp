@@ -1,5 +1,5 @@
 <?php
-/** @var array $stats @var array $pending @var array $myDocuments @var array $latestDocs @var array $notifications */
+/** @var array $stats @var array $myDocuments @var array $latestDocs @var array $notifications */
 $isSuper = Auth::isSuperAdmin();
 
 $statCard = static function (string $label, int $value, string $valueCls, string $icon, string $chipCls,
@@ -13,7 +13,7 @@ $statCard = static function (string $label, int $value, string $valueCls, string
         return '<div class="col-6 col-lg-3"><a class="card stat-card p-3 d-block text-decoration-none" href="'
             . e($href) . '">' . $inner . '</a></div>';
     }
-    return '<div class="col-6 col-lg-3"><div class="card stat-card p-3 h-100">' . $inner . '</div></div>';
+    return '<div class="col-6 col-lg-4"><div class="card stat-card p-3 h-100">' . $inner . '</div></div>';
 };
 ?>
 <div class="page-head">
@@ -28,7 +28,6 @@ $statCard = static function (string $label, int $value, string $valueCls, string
     <?= $statCard('Dokumen berlaku', (int)$stats['green'], 'text-success', 'bi-check2-circle', 'bg-success-subtle text-success') ?>
     <?= $statCard('Perlu revisi', (int)$stats['yellow'], 'text-warning', 'bi-pencil-square', 'bg-warning-subtle text-warning') ?>
     <?= $statCard('Tidak berlaku', (int)$stats['red'], 'text-danger', 'bi-x-octagon', 'bg-danger-subtle text-danger') ?>
-    <?= $statCard('Menunggu persetujuan', (int)$stats['pending'], 'text-info', 'bi-hourglass-split', 'bg-info-subtle text-info') ?>
 </div>
 
 <?php
@@ -58,52 +57,6 @@ $stripItem = static function (string $label, int $value, string $icon, string $c
 
 <div class="row g-3">
     <div class="col-lg-7">
-        <?php if ($isSuper): ?>
-            <div class="card table-card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <strong><i class="bi bi-hourglass-split me-1 text-info"></i>Menunggu persetujuan</strong>
-                    <a href="<?= e(url('/documents?approval=submitted')) ?>">Lihat semua</a>
-                </div>
-                <div class="card-body p-0">
-                    <?php if (!$pending): ?>
-                        <div class="empty-state">
-                            <i class="bi bi-clipboard-check"></i>
-                            Tidak ada dokumen yang menunggu persetujuan.
-                        </div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th>Dokumen</th>
-                                    <th>Pengunggah</th>
-                                    <th>Diajukan</th>
-                                    <th class="text-end">Aksi</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <?php foreach (array_slice($pending, 0, 6) as $d): ?>
-                                    <tr>
-                                        <td>
-                                            <a href="<?= e(url('/documents/' . $d['id'])) ?>"><?= e($d['title']) ?></a>
-                                            <div class="small text-muted">v<?= e($d['version']) ?> · <?= e($d['unit_name'] ?? '-') ?></div>
-                                        </td>
-                                        <td><?= e($d['owner_name'] ?? '-') ?></td>
-                                        <td class="small"><?= format_date($d['submitted_at'], 'd M Y H:i') ?></td>
-                                        <td class="text-end">
-                                            <a class="btn btn-sm btn-outline-primary"
-                                               href="<?= e(url('/documents/' . $d['id'])) ?>">Proses</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        <?php endif; ?>
-
         <div class="card table-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong><i class="bi bi-file-earmark-text me-1 text-primary"></i><?= $isSuper ? 'Dokumen terbaru' : 'Dokumen saya' ?></strong>
@@ -137,10 +90,7 @@ $stripItem = static function (string $label, int $value, string $icon, string $c
                                     </td>
                                     <td class="small"><?= format_date($d['expiry_date']) ?></td>
                                     <td>
-                                        <?= approval_badge((string)$d['approval_status']) ?>
-                                        <?php if (in_array($d['approval_status'], ['approved', 'archived'], true)): ?>
-                                            <?= status_badge((string)$d['status_color']) ?>
-                                        <?php endif; ?>
+                                        <?= status_badge((string)$d['status_color']) ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

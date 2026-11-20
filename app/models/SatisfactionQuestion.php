@@ -27,4 +27,39 @@ final class SatisfactionQuestion extends Model
             [$surveyId]
         );
     }
+
+    /**
+     * Item 11 — validasi input opsi pilihan: "Ya|Tidak" → ['Ya','Tidak'];
+     * null bila kurang dari 2 atau lebih dari 10 opsi.
+     */
+    public static function parseOptions(string $raw): ?array
+    {
+        $parts = [];
+        foreach (explode('|', $raw) as $piece) {
+            $piece = mb_substr(trim($piece), 0, 100);
+            if ($piece !== '' && !in_array($piece, $parts, true)) {
+                $parts[] = $piece;
+            }
+        }
+        if (count($parts) < 2 || count($parts) > 10) {
+            return null;
+        }
+        return $parts;
+    }
+
+    /**
+     * Item 11 — daftar opsi siap render untuk pertanyaan pilihan;
+     * bila opsi kosong (baris lama) pakai bawaan "Ya|Tidak".
+     */
+    public static function optionsOf(array $q): array
+    {
+        $parts = [];
+        foreach (explode('|', (string)($q['options'] ?? '')) as $piece) {
+            $piece = trim($piece);
+            if ($piece !== '') {
+                $parts[] = $piece;
+            }
+        }
+        return $parts ?: ['Ya', 'Tidak'];
+    }
 }

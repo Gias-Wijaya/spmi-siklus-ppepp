@@ -89,8 +89,7 @@ final class Notification extends Model
         $docs = Database::all(
             "SELECT id, title, owner_user_id, expiry_date
                FROM documents
-              WHERE approval_status = 'approved'
-                AND expiry_date IS NOT NULL
+              WHERE expiry_date IS NOT NULL
                 AND expiry_date <= ?",
             [$hiDoc]
         );

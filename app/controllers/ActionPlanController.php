@@ -223,9 +223,8 @@ final class ActionPlanController extends Controller
         $documents = [];
         if ($isSuper && $plan['status'] === 'verified' && $plan['revision_document_id'] === null) {
             $documents = Database::all(
-                "SELECT id, title, version, approval_status
+                "SELECT id, title, version
                    FROM documents
-                  WHERE approval_status <> 'archived'
                   ORDER BY title ASC"
             );
         }
@@ -530,8 +529,8 @@ final class ActionPlanController extends Controller
         $note       = trim((string)($_POST['note'] ?? ''));
         $document   = $documentId > 0 ? Document::find($documentId) : null;
 
-        if (!$document || $document['approval_status'] === 'archived') {
-            flash('danger', 'Dokumen tujuan tidak ditemukan atau sudah diarsipkan.');
+        if (!$document) {
+            flash('danger', 'Dokumen tujuan tidak ditemukan.');
             $this->redirect('/followup/plans/' . (int)$id);
         }
         if ($note === '') {

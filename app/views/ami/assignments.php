@@ -3,9 +3,11 @@
  * M3 — Penugasan auditor–auditee per unit (FR-07): pasangan auditor/unit tahunan.
  * @var array $periods @var array|null $schedule @var array $assignments
  * @var array $findingCounts @var array $freeUnits @var array $users @var array $errors
+ * @var array $auditorUsers
  */
 $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invalid' : '';
 $locked = $schedule && $schedule['status'] === 'closed';
+$firstAuditor = (int)($auditorUsers[0]['id'] ?? 0);
 
 $userName = static fn (?int $id): string => $id && isset($users[array_search($id, array_column($users, 'id'))])
     ? $users[array_search($id, array_column($users, 'id'))]['name']
@@ -61,7 +63,7 @@ $userName = static fn (?int $id): string => $id && isset($users[array_search($id
                             <?= csrf_field() ?>
                             <input type="hidden" name="schedule_id" value="<?= (int)$schedule['id'] ?>">
                             <div class="mb-2">
-                                <label class="form-label">Unit kerja (auditee)</label>
+                                <label class="form-label">Unit kerja (auditee — waket)</label>
                                 <select name="unit_id" class="form-select<?= $err('unit_id') ?>">
                                     <option value="0">— pilih unit —</option>
                                     <?php foreach ($freeUnits as $u): ?>
@@ -69,15 +71,24 @@ $userName = static fn (?int $id): string => $id && isset($users[array_search($id
                                     <?php endforeach; ?>
                                 </select>
                                 <?php if (isset($errors['unit_id'])): ?><div class="invalid-feedback"><?= e($errors['unit_id']) ?></div><?php endif; ?>
+                                <div class="form-text">Auditee hanya unit waket (W1–W3) — LPM tidak menjadi auditee.</div>
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">Auditor</label>
-                                <select name="auditor_user_id" class="form-select">
-                                    <option value="0">— belum ditetapkan —</option>
-                                    <?php foreach ($users as $u): ?>
-                                        <option value="<?= (int)$u['id'] ?>"><?= e($u['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <label class="form-label">Auditor <span class="text-danger">*</span></label>
+                                <?php if (!$auditorUsers): ?>
+                                    <div class="text-muted small">Belum ada pengguna aktif pada unit LPM.</div>
+                                <?php else: ?>
+                                    <!-- Item 8 (foto-08): auditor hanya pengguna unit LPM. -->
+                                    <select name="auditor_user_id" class="form-select<?= $err('auditor_user_id') ?>">
+                                        <?php foreach ($auditorUsers as $u): ?>
+                                            <option value="<?= (int)$u['id'] ?>" <?= (int)$u['id'] === $firstAuditor ? 'selected' : '' ?>>
+                                                <?= e($u['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if (isset($errors['auditor_user_id'])): ?><div class="invalid-feedback"><?= e($errors['auditor_user_id']) ?></div><?php endif; ?>
+                                    <div class="form-text">Auditor AMI berasal dari unit LPM (penugasan, bukan role).</div>
+                                <?php endif; ?>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Ketua auditee (lead unit)</label>

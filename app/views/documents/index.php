@@ -5,14 +5,13 @@ $query = array_filter([
     'q'           => $filters['q'],
     'category_id' => $filters['category_id'] ?: '',
     'status'      => $filters['status'],
-    'approval'    => $filters['approval'],
 ], static fn ($v) => $v !== '' && $v !== null);
 ?>
 <div class="page-head">
     <div class="page-desc">
         <i class="bi bi-file-earmark-text me-1"></i>
         <strong>Dokumen SPMI</strong>, unggah &amp; klasifikasi kebijakan, pedoman, SOP, dan instrumen
-        dengan masa berlaku serta alur persetujuan (FR-01–FR-04).
+        dengan masa berlaku serta riwayat versi (FR-01–FR-03).
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="<?= e(url('/documents/export' . ($query ? '?' . http_build_query($query) : ''))) ?>"
@@ -33,7 +32,7 @@ $query = array_filter([
                 <input class="form-control" type="search" name="q" value="<?= e($filters['q']) ?>"
                        placeholder="Judul / nomor dokumen…">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label small">Kategori</label>
                 <select class="form-select" name="category_id">
                     <option value="">Semua kategori</option>
@@ -44,24 +43,13 @@ $query = array_filter([
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small">Status warna</label>
                 <select class="form-select" name="status">
                     <option value="">Semua</option>
                     <option value="green" <?= $filters['status'] === 'green' ? 'selected' : '' ?>>Hijau</option>
                     <option value="yellow" <?= $filters['status'] === 'yellow' ? 'selected' : '' ?>>Kuning</option>
                     <option value="red" <?= $filters['status'] === 'red' ? 'selected' : '' ?>>Merah</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">Status persetujuan</label>
-                <select class="form-select" name="approval">
-                    <option value="">Semua</option>
-                    <?php foreach (['draft', 'submitted', 'approved', 'rejected', 'archived'] as $a): ?>
-                        <option value="<?= $a ?>" <?= $filters['approval'] === $a ? 'selected' : '' ?>>
-                            <?= ['draft' => 'Draft', 'submitted' => 'Menunggu', 'approved' => 'Disetujui', 'rejected' => 'Dikembalikan', 'archived' => 'Diarsipkan'][$a] ?>
-                        </option>
-                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-1 d-grid">
@@ -102,10 +90,7 @@ $query = array_filter([
                     </thead>
                     <tbody>
                     <?php foreach ($rows as $d): ?>
-                        <?php
-                        $days  = days_to_expiry($d['expiry_date']);
-                        $shown = in_array($d['approval_status'], ['approved', 'archived'], true);
-                        ?>
+                        <?php $days = days_to_expiry($d['expiry_date']); ?>
                         <tr>
                             <td>
                                 <a href="<?= e(url('/documents/' . $d['id'])) ?>"><strong><?= e($d['title']) ?></strong></a>
@@ -121,15 +106,14 @@ $query = array_filter([
                             <td>v<?= e($d['version']) ?></td>
                             <td class="small">
                                 <?= format_date($d['expiry_date']) ?>
-                                <?php if ($days !== null && $days >= 0 && $shown): ?>
+                                <?php if ($days !== null && $days >= 0): ?>
                                     <br><span class="text-muted">(<?= $days ?> hari lagi)</span>
-                                <?php elseif ($days !== null && $days < 0 && $shown): ?>
+                                <?php elseif ($days !== null): ?>
                                     <br><span class="text-danger">(kedaluwarsa)</span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?= approval_badge((string)$d['approval_status']) ?>
-                                <?php if ($shown): ?><br><?= status_badge((string)$d['status_color']) ?><?php endif; ?>
+                                <?= status_badge((string)$d['status_color']) ?>
                             </td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary"

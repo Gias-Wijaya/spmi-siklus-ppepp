@@ -8,28 +8,27 @@
 | 2 | `users` | Pengguna: **super_admin** (LPM) & **anggota** (Waket I–III) | `id` |
 | 3 | `standards` | Standar SPMI (Pendidikan, Penelitian, Pengabdian, SDM, Sarpras, Pembiayaan, Penjaminan Mutu, Data & Informasi) | `id` |
 | 4 | `document_categories` | Hierarki dokumen (Kebijakan→Pedoman→Manual/SOP→Instrumen→Formulir→Laporan), mendukung **M1** | `id` |
-| 5 | `documents` | Dokumen SPMI: nomor, versi, **tanggal & masa berlaku**, **status 🟢🟡🔴**, status persetujuan | `id` |
-| 6 | `document_versions` | Riwayat versi setiap dokumen | `id` |
-| 7 | `document_approvals` | Alur persetujuan berjenjang | `id` |
-| 8 | `monev_periods` | Periode Monev (**3 bulan sekali**) | `id` |
-| 9 | `monev_indicators` | Indikator capaian (turunan standar) untuk **M2** | `id` |
-| 10 | `monev_reports` | Laporan capaian satu unit pada satu periode | `id` |
-| 11 | `monev_values` | Nilai capaian per indikator + unggahan bukti | `id` |
-| 12 | `ami_schedules` | Jadwal AMI **tahunan** (M3) | `id` |
-| 13 | `ami_instruments` | Instrumen AMI — **indikator fleksibel (bisa diedit)** | `id` |
-| 14 | `ami_instrument_logs` | Jejak perubahan instrumen (siapa, kapan, apa yang berubah) | `id` |
-| 15 | `ami_assignments` | Penugasan pasangan **auditor–auditee** per unit | `id` |
-| 16 | `ami_assessments` | Penilaian per indikator: skor 0–4, bukti | `id` |
-| 17 | `ami_findings` | Temuan hasil penilaian | `id` |
-| 18 | `action_plans` | **Rencana tindak lanjut**: PIC, tenggat, status | `id` |
-| 19 | `action_evidence` | Bukti penyelesaian + status verifikasi | `id` |
-| 20 | `satisfaction_surveys` | **Formulir kepuasan** periode tertentu | `id` |
-| 21 | `satisfaction_questions` | Pertanyaan kepuasan | `id` |
-| 22 | `satisfaction_responses` | Satu jawaban responden | `id` |
-| 23 | `satisfaction_answers` | Skor per pertanyaan | `id` |
-| 24 | `notifications` | Notifikasi pengguna (M5) | `id` |
-| 25 | `audit_logs` | Jejak audit seluruh aksi penting (M5) | `id` |
-| 26 | `settings` | Pengaturan sistem (nama PT, logo, dst.) | `key` |
+| 5 | `documents` | Dokumen SPMI: nomor, versi, **tanggal & masa berlaku**, **status 🟢🟡🔴** — tanpa alur persetujuan (Revisi Review LPM) | `id` |
+| 6 | `document_versions` | Riwayat versi setiap dokumen (unggah murni, tanpa status persetujuan versi) | `id` |
+| 7 | `monev_periods` | Periode Monev (**3 bulan sekali**) | `id` |
+| 8 | `monev_indicators` | Indikator capaian (turunan standar) untuk **M2** | `id` |
+| 9 | `monev_reports` | Laporan capaian satu unit pada satu periode | `id` |
+| 10 | `monev_values` | Nilai capaian per indikator + unggahan bukti | `id` |
+| 11 | `ami_schedules` | Jadwal AMI **tahunan** (M3) | `id` |
+| 12 | `ami_instruments` | Instrumen AMI — **indikator fleksibel (bisa diedit)** | `id` |
+| 13 | `ami_instrument_logs` | Jejak perubahan instrumen (siapa, kapan, apa yang berubah) | `id` |
+| 14 | `ami_assignments` | Penugasan pasangan **auditor (LPM)–auditee (waket)** per unit | `id` |
+| 15 | `ami_assessments` | Penilaian per indikator: skor 0–4 + bukti — **skor boleh kosong** (bukti auditee diunggah sebelum dinilai auditor) | `id` |
+| 16 | `ami_findings` | Temuan hasil penilaian | `id` |
+| 17 | `action_plans` | **Rencana tindak lanjut**: PIC, tenggat, status **Terbuka→Berjalan→Selesai→Terverifikasi** | `id` |
+| 18 | `action_evidence` | Bukti penyelesaian + status verifikasi | `id` |
+| 19 | `satisfaction_surveys` | **Formulir kepuasan** periode tertentu + **tautan tamu** `guest_token` (bisa dimatikan) | `id` |
+| 20 | `satisfaction_questions` | Pertanyaan kepuasan: skala / **pilihan** (`options`) / teks | `id` |
+| 21 | `satisfaction_responses` | Satu jawaban responden — anggota atau **Tamu** (`respondent_user_id` NULL) | `id` |
+| 22 | `satisfaction_answers` | Skor per pertanyaan | `id` |
+| 23 | `notifications` | Notifikasi pengguna (M5) — tipe `tenggat/monev/dokumen/temuan/umum` | `id` |
+| 24 | `audit_logs` | Jejak audit seluruh aksi penting (M5) | `id` |
+| 25 | `settings` | Pengaturan sistem (nama PT, logo, dst.) | `key` |
 
 ## B. Relasi
 
@@ -43,21 +42,20 @@
 | R6 | `standards` → `ami_instruments` | 1 : N | Instrumen turunan standar |
 | R7 | `document_categories` → `documents` | 1 : N | Kategori berjenjang |
 | R8 | `documents` → `document_versions` | 1 : N | Riwayat versi |
-| R9 | `documents` → `document_approvals` | 1 : N | Alur persetujuan |
-| R10 | `users` → `documents` | 1 : N | Pemilik / pengunggah dokumen |
-| R11 | `monev_periods` → `monev_reports` | 1 : N | Satu periode, banyak unit |
-| R12 | `monev_reports` → `monev_values` | 1 : N | Nilai tiap indikator |
-| R13 | `monev_indicators` → `monev_values` | 1 : N | Indikator dinilai banyak periode |
-| R14 | `ami_schedules` → `ami_instruments` | 1 : N | Instrumen per tahun AMI |
-| R15 | `ami_schedules` → `ami_assignments` | 1 : N | Penugasan auditor per tahun |
-| R16 | `ami_assignments` → `ami_assessments` | 1 : N | Penilaian per unit |
-| R17 | `ami_instruments` → `ami_assessments` | 1 : N | Indikator dinilai banyak unit |
-| R18 | `ami_assessments` → `ami_findings` | 1 : N | Satu penilaian dapat melahirkan temuan |
-| R19 | `ami_findings` → `action_plans` | 1 : N | Satu temuan bisa punya beberapa aksi |
-| R20 | `action_plans` → `action_evidence` | 1 : N | Beberapa bukti per aksi |
-| R21 | `satisfaction_surveys` → `satisfaction_questions` / `responses` | 1 : N | Formulir & isian |
-| R22 | `satisfaction_responses` → `satisfaction_answers` | 1 : N | Jawaban per pertanyaan |
-| R23 | `users` → `notifications` / `audit_logs` | 1 : N | Jejak & pemberitahuan |
+| R9 | `users` → `documents` | 1 : N | Pemilik / pengunggah dokumen |
+| R10 | `monev_periods` → `monev_reports` | 1 : N | Satu periode, banyak unit |
+| R11 | `monev_reports` → `monev_values` | 1 : N | Nilai tiap indikator |
+| R12 | `monev_indicators` → `monev_values` | 1 : N | Indikator dinilai banyak periode |
+| R13 | `ami_schedules` → `ami_instruments` | 1 : N | Instrumen per tahun AMI |
+| R14 | `ami_schedules` → `ami_assignments` | 1 : N | Penugasan auditor per tahun |
+| R15 | `ami_assignments` → `ami_assessments` | 1 : N | Penilaian per unit |
+| R16 | `ami_instruments` → `ami_assessments` | 1 : N | Indikator dinilai banyak unit |
+| R17 | `ami_assessments` → `ami_findings` | 1 : N | Satu penilaian dapat melahirkan temuan |
+| R18 | `ami_findings` → `action_plans` | 1 : N | Satu temuan bisa punya beberapa aksi |
+| R19 | `action_plans` → `action_evidence` | 1 : N | Beberapa bukti per aksi |
+| R20 | `satisfaction_surveys` → `satisfaction_questions` / `responses` | 1 : N | Formulir & isian (anggota atau tamu) |
+| R21 | `satisfaction_responses` → `satisfaction_answers` | 1 : N | Jawaban per pertanyaan |
+| R22 | `users` → `notifications` / `audit_logs` | 1 : N | Jejak & pemberitahuan |
 
 ## C. Mermaid ERD (bagian per modul)
 
@@ -72,8 +70,6 @@ erDiagram
     standards ||--o{ documents : "terkait"
     document_categories ||--o{ documents : "mengelompokkan"
     documents ||--o{ document_versions : "memiliki versi"
-    documents ||--o{ document_approvals : "melewati"
-    users ||--o{ document_approvals : "menyetujui"
 
     units {
         int id PK
@@ -117,10 +113,8 @@ erDiagram
         date effective_date
         date expiry_date
         varchar file_path
-        enum approval_status "draft|submitted|approved|rejected|archived"
         enum status_color "green|yellow|red"
         text description
-        datetime approved_at
     }
     document_versions {
         int id PK
@@ -129,18 +123,7 @@ erDiagram
         varchar file_path
         text change_note
         int submitted_by FK
-        int approved_by FK
-        enum status "pending|approved|rejected"
         datetime created_at
-    }
-    document_approvals {
-        int id PK
-        int document_id FK
-        int step
-        int approver_user_id FK
-        enum status "pending|approved|rejected"
-        text comment
-        datetime acted_at
     }
 ```
 
@@ -253,7 +236,7 @@ erDiagram
         int id PK
         int assignment_id FK
         int instrument_id FK
-        int score
+        int score "nullable — bukti auditee unggah dulu, skor menyusul"
         varchar evidence_file
         text finding_note
         int filled_by FK
@@ -276,19 +259,22 @@ erDiagram
         date start_date
         date end_date
         enum status "draft|open|closed"
+        varchar guest_token "tautan /puas/{token} mode tamu"
+        tinyint guest_enabled "1 = tautan tamu aktif"
     }
     satisfaction_questions {
         int id PK
         int survey_id FK
         text question
         enum type "skala|pilihan|teks"
+        varchar options "opsi pilihan dipisah | (mis. Ya|Tidak)"
         decimal weight
         tinyint is_active
     }
     satisfaction_responses {
         int id PK
         int survey_id FK
-        int respondent_user_id FK
+        int respondent_user_id FK "NULL = responden Tamu"
         datetime submitted_at
     }
     satisfaction_answers {
@@ -346,7 +332,7 @@ erDiagram
         int user_id FK
         varchar title
         text message
-        enum type "persetujuan|tenggat|dokumen|temuan"
+        enum type "tenggat|monev|dokumen|temuan|umum"
         varchar ref_table
         int ref_id
         tinyint is_read

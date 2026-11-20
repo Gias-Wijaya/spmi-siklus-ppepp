@@ -13,8 +13,6 @@ final class DashboardController extends Controller
             'green'     => $colors['green'],
             'yellow'    => $colors['yellow'],
             'red'       => $colors['red'],
-            'pending'   => Document::count("approval_status = 'submitted'"),
-            'draft'     => Document::count("approval_status = 'draft'"),
             'users'     => User::count(),
             'units'     => Unit::count(),
             'actions'   => ActionPlan::count("status <> 'verified'"),
@@ -23,7 +21,6 @@ final class DashboardController extends Controller
             'ami'       => AmiAssessment::count(),
         ];
 
-        $pending     = Auth::isSuperAdmin() ? Document::pending() : [];
         $myDocuments = Database::all(
             'SELECT d.*, c.name AS category_name, un.name AS unit_name
                FROM documents d
@@ -49,7 +46,6 @@ final class DashboardController extends Controller
             'title'         => 'Dasbor',
             'user'          => $user,
             'stats'         => $stats,
-            'pending'       => $pending,
             'myDocuments'   => $myDocuments,
             'latestDocs'    => $latestDocs,
             'notifications' => $notifications,

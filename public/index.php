@@ -60,10 +60,6 @@ $router->post('/documents',             'DocumentController@store');
 $router->get('/documents/{id}/edit',    'DocumentController@edit');
 $router->post('/documents/{id}',        'DocumentController@update');
 $router->get('/documents/{id}',         'DocumentController@show');
-$router->post('/documents/{id}/submit', 'DocumentController@submit');
-$router->post('/documents/{id}/approve','DocumentController@approve');
-$router->post('/documents/{id}/reject', 'DocumentController@reject');
-$router->post('/documents/{id}/archive','DocumentController@archive');
 $router->post('/documents/{id}/revise', 'DocumentController@revise');
 $router->get('/documents/{id}/download','DocumentController@download');
 
@@ -118,6 +114,11 @@ $router->post('/ami/questions/{id}/delete',           'AmiController@deleteQuest
 $router->get('/ami/satisfaction/{id}/fill',           'AmiController@fill');
 $router->post('/ami/satisfaction/{id}/fill',          'AmiController@submitFill');
 $router->get('/ami/satisfaction/{id}/recap',          'AmiController@recap');
+$router->post('/ami/satisfaction/{id}/guest-toggle',  'AmiController@toggleGuest');  // Item 12 — tautan tamu
+
+/* Item 12 — mode tamu: responden tanpa akun (tautan token per formulir, publik). */
+$router->get('/puas/{token}',  'AmiController@guestFill');
+$router->post('/puas/{token}', 'AmiController@submitGuestFill');
 
 /* --------------------------------------------- M4 Pengendalian–Peningkatan (FR-09–FR-12) */
 $router->get('/followup',                            'ActionPlanController@index');

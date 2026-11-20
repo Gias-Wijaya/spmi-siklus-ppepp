@@ -5,20 +5,18 @@ final class Document extends Model
 {
     protected static string $table = 'documents';
 
-    /** Segarkan status 🟢🟡🔴 seluruh dokumen yang berlaku. */
+    /** Segarkan status 🟢🟡🔴 seluruh dokumen (warna hanya dari masa berlaku). */
     public static function refreshStatusColors(): void
     {
         $days = (int)config('validity_warning_days', 30);
         Database::stmt(
             "UPDATE documents
                 SET status_color = CASE
-                        WHEN approval_status = 'archived'        THEN 'red'
                         WHEN expiry_date IS NULL                 THEN 'green'
                         WHEN expiry_date <  CURDATE()            THEN 'red'
                         WHEN expiry_date <= DATE_ADD(CURDATE(), INTERVAL {$days} DAY) THEN 'yellow'
                         ELSE 'green'
-                    END
-              WHERE approval_status IN ('approved', 'archived')"
+                    END"
         );
     }
 
@@ -44,14 +42,6 @@ final class Document extends Model
         if (!empty($filters['status']) && in_array($filters['status'], ['green', 'yellow', 'red'], true)) {
             $where[]   = 'd.status_color = ?';
             $params[]  = $filters['status'];
-        }
-        if (!empty($filters['approval']) && in_array(
-            $filters['approval'],
-            ['draft', 'submitted', 'approved', 'rejected', 'archived'],
-            true
-        )) {
-            $where[]   = 'd.approval_status = ?';
-            $params[]  = $filters['approval'];
         }
         if (!empty($filters['unit_id'])) {
             $where[]   = 'd.unit_id = ?';
@@ -102,23 +92,10 @@ final class Document extends Model
         );
     }
 
-    public static function pending(): array
-    {
-        return Database::all(
-            "SELECT d.*, un.name AS unit_name, usr.name AS owner_name
-               FROM documents d
-               LEFT JOIN units un  ON un.id = d.unit_id
-               LEFT JOIN users usr ON usr.id = d.owner_user_id
-              WHERE d.approval_status = 'submitted'
-              ORDER BY d.submitted_at ASC"
-        );
-    }
-
     public static function countsByColor(): array
     {
         $rows  = Database::all(
-            "SELECT status_color, COUNT(*) AS total FROM documents
-              WHERE approval_status IN ('approved','archived') GROUP BY status_color"
+            'SELECT status_color, COUNT(*) AS total FROM documents GROUP BY status_color'
         );
         $count = ['green' => 0, 'yellow' => 0, 'red' => 0];
         foreach ($rows as $row) {

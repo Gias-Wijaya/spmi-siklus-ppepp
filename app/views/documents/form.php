@@ -150,14 +150,9 @@ $formTitle = $isEdit ? 'Ubah Metadata Dokumen' : 'Unggah Dokumen SPMI';
 
             <hr>
             <div class="d-flex gap-2">
-                <?php if (!$isEdit): ?>
-                    <button class="btn btn-success" type="submit" name="submit" value="1">
-                        Simpan &amp; ajukan persetujuan
-                    </button>
-                    <button class="btn btn-outline-primary" type="submit">Simpan sebagai draft</button>
-                <?php else: ?>
-                    <button class="btn btn-primary" type="submit">Simpan perubahan</button>
-                <?php endif; ?>
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-save me-1"></i><?= $isEdit ? 'Simpan perubahan' : 'Simpan dokumen' ?>
+                </button>
                 <a class="btn btn-outline-secondary"
                    href="<?= e($isEdit ? url('/documents/' . (int)$doc['id']) : url('/documents')) ?>">Batal</a>
             </div>

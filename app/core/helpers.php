@@ -149,18 +149,6 @@ function status_badge(string $color): string
     };
 }
 
-function approval_badge(string $status): string
-{
-    return match ($status) {
-        'draft'     => '<span class="badge text-bg-secondary">Draft</span>',
-        'submitted' => '<span class="badge text-bg-info">Menunggu persetujuan</span>',
-        'approved'  => '<span class="badge text-bg-success">Disetujui</span>',
-        'rejected'  => '<span class="badge text-bg-danger">Dikembalikan</span>',
-        'archived'  => '<span class="badge text-bg-dark">Diarsipkan</span>',
-        default     => '<span class="badge text-bg-secondary">' . e($status) . '</span>',
-    };
-}
-
 /** Status laporan Monev. */
 function monev_status_badge(string $status): string
 {

@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 /**
  * M1 — Dokumen SPMI: unggah, klasifikasi, masa berlaku (🟢🟡🔴),
- * alur persetujuan, versi/revisi, arsip.
+ * versi/revisi. Pengesahan berkas (TTD basah) dilakukan di luar sistem —
+ * sistem hanya menyimpan berkas + metadata + riwayat versi.
  */
 final class DocumentController extends Controller
 {
@@ -14,7 +15,6 @@ final class DocumentController extends Controller
             'q'           => trim((string)($_GET['q'] ?? '')),
             'category_id' => (int)($_GET['category_id'] ?? 0),
             'status'      => (string)($_GET['status'] ?? ''),
-            'approval'    => (string)($_GET['approval'] ?? ''),
         ];
         $page = max(1, (int)($_GET['page'] ?? 1));
         $per  = (int)config('per_page', 10);
@@ -45,7 +45,6 @@ final class DocumentController extends Controller
             'q'           => trim((string)($_GET['q'] ?? '')),
             'category_id' => (int)($_GET['category_id'] ?? 0),
             'status'      => (string)($_GET['status'] ?? ''),
-            'approval'    => (string)($_GET['approval'] ?? ''),
         ];
 
         // Sama seperti daftar layar (tanpa paginasi) sehingga isinya identik.
@@ -56,14 +55,6 @@ final class DocumentController extends Controller
             'yellow' => 'Kuning (mendekati masa berlaku)',
             'red'    => 'Merah (kedaluwarsa)',
         ];
-        $approvalLabel = [
-            'draft'     => 'Draft',
-            'submitted' => 'Menunggu persetujuan',
-            'approved'  => 'Disetujui',
-            'rejected'  => 'Dikembalikan',
-            'archived'  => 'Diarsipkan',
-        ];
-
         $data = [];
         foreach ($rows as $r) {
             $data[] = [
@@ -77,7 +68,6 @@ final class DocumentController extends Controller
                 format_date($r['effective_date']),
                 format_date($r['expiry_date']),
                 $colorLabel[$r['status_color']] ?? $r['status_color'],
-                $approvalLabel[$r['approval_status']] ?? $r['approval_status'],
                 format_date($r['updated_at'], 'd M Y H:i'),
             ];
         }
@@ -85,7 +75,7 @@ final class DocumentController extends Controller
         export_csv('dokumen-spmi-' . date('Y-m-d') . '.csv', array_merge(
             [[
                 'Judul', 'Nomor dokumen', 'Versi', 'Kategori', 'Standar', 'Unit', 'Pemilik',
-                'Berlaku sejak', 'Berlaku s/d', 'Status masa berlaku', 'Status persetujuan', 'Diperbarui',
+                'Berlaku sejak', 'Berlaku s/d', 'Status masa berlaku', 'Diperbarui',
             ]],
             $data
         ));
@@ -135,10 +125,9 @@ final class DocumentController extends Controller
             $this->renderForm(null, ['file' => $upload['error']]);
         }
 
-        $submit   = isset($_POST['submit']);
-        $expiry   = trim((string)($_POST['expiry_date'] ?? '')) ?: null;
-        $now      = date('Y-m-d H:i:s');
+        $expiry = trim((string)($_POST['expiry_date'] ?? '')) ?: null;
 
+        // Unggah = langsung aktif sesuai masa berlaku (tanpa alur persetujuan).
         $id = Document::create([
             'category_id'     => ((int)($_POST['category_id'] ?? 0)) ?: null,
             'standard_id'     => ((int)($_POST['standard_id'] ?? 0)) ?: null,
@@ -150,26 +139,15 @@ final class DocumentController extends Controller
             'effective_date'  => trim((string)($_POST['effective_date'] ?? '')) ?: null,
             'expiry_date'     => $expiry,
             'file_path'       => $upload['path'],
-            'approval_status' => $submit ? 'submitted' : 'draft',
             'status_color'    => 'green',
             'description'     => trim((string)($_POST['description'] ?? '')) ?: null,
-            'submitted_at'    => $submit ? $now : null,
         ]);
 
-        if ($submit) {
-            $this->openApproval($id);
-            $this->notifySuperAdmins(
-                'Dokumen menunggu persetujuan',
-                '"' . trim((string)$_POST['title']) . '" diajukan oleh ' . Auth::user()['name'] . '.',
-                'persetujuan',
-                'documents',
-                $id
-            );
-        }
+        Document::refreshStatusColors();
 
-        audit('create', 'documents', $id, ['title' => $_POST['title'], 'submit' => $submit]);
+        audit('create', 'documents', $id, ['title' => $_POST['title']]);
         old_clear();
-        flash('success', $submit ? 'Dokumen diunggah dan diajukan untuk persetujuan.' : 'Dokumen tersimpan sebagai draft.');
+        flash('success', 'Dokumen berhasil diunggah dan langsung berlaku sesuai masa berlaku yang ditetapkan.');
         $this->redirect('/documents/' . $id);
     }
 
@@ -185,7 +163,6 @@ final class DocumentController extends Controller
             'title'     => $doc['title'],
             'doc'       => $doc,
             'versions'  => DocumentVersion::forDocument((int)$id),
-            'approvals' => DocumentApproval::forDocument((int)$id),
             'canEdit'   => Document::canEdit($doc),
         ]);
     }
@@ -248,130 +225,6 @@ final class DocumentController extends Controller
         $this->redirect('/documents/' . (int)$id);
     }
 
-    /* ------------------------------------------------------------------ Alur persetujuan */
-    public function submit(string $id): void
-    {
-        $doc = Document::find((int)$id);
-        if (!$doc) {
-            $this->notFound('Dokumen tidak ditemukan.');
-        }
-        if (!Document::canEdit($doc)) {
-            $this->forbidden();
-        }
-        if (!in_array($doc['approval_status'], ['draft', 'rejected'], true)) {
-            flash('warning', 'Dokumen hanya dapat diajukan dari status draft/dikembalikan.');
-            $this->redirect('/documents/' . (int)$id);
-        }
-
-        $now = date('Y-m-d H:i:s');
-        Document::updateById((int)$id, [
-            'approval_status' => 'submitted',
-            'submitted_at'    => $now,
-        ]);
-        $this->openApproval((int)$id);
-
-        $this->notifySuperAdmins(
-            'Dokumen menunggu persetujuan',
-            '"' . $doc['title'] . '" diajukan oleh ' . Auth::user()['name'] . '.',
-            'persetujuan',
-            'documents',
-            (int)$id
-        );
-
-        audit('submit', 'documents', (int)$id, ['title' => $doc['title']]);
-        flash('success', 'Dokumen diajukan untuk persetujuan.');
-        $this->redirect('/documents/' . (int)$id);
-    }
-
-    public function approve(string $id): void
-    {
-        $this->requireSuperAdmin();
-        $doc = $this->mustBeSubmitted($id);
-
-        Document::updateById((int)$id, [
-            'approval_status' => 'approved',
-            'approved_at'     => date('Y-m-d H:i:s'),
-        ]);
-
-        Database::update(
-            'document_approvals',
-            ['status' => 'approved', 'approver_user_id' => Auth::id(), 'comment' => trim((string)($_POST['comment'] ?? '')) ?: null, 'acted_at' => date('Y-m-d H:i:s')],
-            "document_id = ? AND status = 'pending'",
-            [(int)$id]
-        );
-
-        Document::refreshStatusColors();
-
-        $ownerId = (int)$doc['owner_user_id'];
-        if ($ownerId > 0) {
-            Notification::send(
-                $ownerId,
-                'Dokumen disetujui',
-                '"' . $doc['title'] . '" telah disetujui dan berlaku.',
-                'persetujuan',
-                'documents',
-                (int)$id
-            );
-        }
-
-        audit('approve', 'documents', (int)$id, ['title' => $doc['title']]);
-        flash('success', 'Dokumen disetujui dan dinyatakan berlaku.');
-        $this->redirect('/documents/' . (int)$id);
-    }
-
-    public function reject(string $id): void
-    {
-        $this->requireSuperAdmin();
-        $doc = $this->mustBeSubmitted($id);
-
-        $comment = trim((string)($_POST['comment'] ?? ''));
-        if ($comment === '') {
-            flash('danger', 'Catatan pengembalian wajib diisi.');
-            $this->redirect('/documents/' . (int)$id);
-        }
-
-        Document::updateById((int)$id, ['approval_status' => 'rejected']);
-
-        Database::update(
-            'document_approvals',
-            ['status' => 'rejected', 'approver_user_id' => Auth::id(), 'comment' => $comment, 'acted_at' => date('Y-m-d H:i:s')],
-            "document_id = ? AND status = 'pending'",
-            [(int)$id]
-        );
-
-        $ownerId = (int)$doc['owner_user_id'];
-        if ($ownerId > 0) {
-            Notification::send(
-                $ownerId,
-                'Dokumen dikembalikan',
-                '"' . $doc['title'] . '" dikembalikan: ' . $comment,
-                'persetujuan',
-                'documents',
-                (int)$id
-            );
-        }
-
-        audit('reject', 'documents', (int)$id, ['comment' => $comment]);
-        flash('warning', 'Dokumen dikembalikan ke pengunggah untuk revisi.');
-        $this->redirect('/documents/' . (int)$id);
-    }
-
-    public function archive(string $id): void
-    {
-        $this->requireSuperAdmin();
-        $doc = Document::find((int)$id);
-        if (!$doc) {
-            $this->notFound('Dokumen tidak ditemukan.');
-        }
-
-        Document::updateById((int)$id, ['approval_status' => 'archived']);
-        Document::refreshStatusColors();
-
-        audit('archive', 'documents', (int)$id, ['title' => $doc['title']]);
-        flash('success', 'Dokumen diarsipkan (status merah — tidak berlaku).');
-        $this->redirect('/documents/' . (int)$id);
-    }
-
     /* ------------------------------------------------------------------ Revisi (versi baru) */
     public function revise(string $id): void
     {
@@ -381,10 +234,6 @@ final class DocumentController extends Controller
         }
         if (!Document::canEdit($doc)) {
             $this->forbidden();
-        }
-        if ($doc['approval_status'] === 'archived') {
-            flash('warning', 'Dokumen terarsip tidak dapat direvisi.');
-            $this->redirect('/documents/' . (int)$id);
         }
 
         $version = trim((string)($_POST['version'] ?? ''));
@@ -407,27 +256,17 @@ final class DocumentController extends Controller
             'file_path'    => $upload['path'],
             'change_note'  => trim((string)($_POST['change_note'] ?? '')) ?: null,
             'submitted_by' => Auth::id(),
-            'status'       => 'pending',
         ]);
 
         Document::updateById((int)$id, [
-            'version'         => $version,
-            'file_path'       => $upload['path'],
-            'approval_status' => 'submitted',
-            'submitted_at'    => $now,
+            'version'   => $version,
+            'file_path' => $upload['path'],
         ]);
 
-        $this->openApproval((int)$id);
-        $this->notifySuperAdmins(
-            'Revisi dokumen menunggu persetujuan',
-            '"' . $doc['title'] . '" direvisi ke versi ' . $version . ' oleh ' . Auth::user()['name'] . '.',
-            'persetujuan',
-            'documents',
-            (int)$id
-        );
+        Document::refreshStatusColors();
 
         audit('revise', 'documents', (int)$id, ['old_version' => $doc['version'], 'new_version' => $version]);
-        flash('success', 'Versi baru diunggah dan diajukan untuk persetujuan.');
+        flash('success', 'Versi baru diunggah — versi sebelumnya tetap terlacak pada riwayat versi.');
         $this->redirect('/documents/' . (int)$id);
     }
 
@@ -494,38 +333,4 @@ final class DocumentController extends Controller
         }
     }
 
-    private function mustBeSubmitted(string $id): array
-    {
-        $doc = Document::find((int)$id);
-        if (!$doc) {
-            $this->notFound('Dokumen tidak ditemukan.');
-        }
-        if ($doc['approval_status'] !== 'submitted') {
-            flash('warning', 'Hanya dokumen berstatus "menunggu persetujuan" yang dapat diproses.');
-            $this->redirect('/documents/' . (int)$id);
-        }
-        return $doc;
-    }
-
-    /** Buat baris tahap persetujuan baru. */
-    private function openApproval(int $documentId): void
-    {
-        $step = (int)Database::scalar(
-            'SELECT COALESCE(MAX(step), 0) + 1 FROM document_approvals WHERE document_id = ?',
-            [$documentId]
-        );
-        DocumentApproval::create([
-            'document_id' => $documentId,
-            'step'        => $step,
-            'status'      => 'pending',
-        ]);
-    }
-
-    private function notifySuperAdmins(string $title, string $message, string $type, string $refTable, int $refId): void
-    {
-        $ids = User::superAdminIds();
-        if ($ids) {
-            Notification::send($ids, $title, $message, $type, $refTable, $refId);
-        }
-    }
 }

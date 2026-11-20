@@ -92,7 +92,6 @@ $hl = static function (string $text, string $q): string {
                             </td>
                             <td class="text-end text-nowrap">
                                 <?= status_badge((string)$d['status_color']) ?>
-                                <?= approval_badge((string)$d['approval_status']) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

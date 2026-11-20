@@ -4,24 +4,24 @@ Sistem informasi berbasis **siklus PPEPP** (Perencanaan–Pelaksanaan–Evaluasi
 
 - **Teknologi:** PHP 8 *tanpa framework* (PDO, router regex, pola MVC) · MySQL · Bootstrap 5 · font Inter
 - **Kebutuhan:** FR-01–FR-15 (fungsional) · NF-01–NF-08 (non-fungsional) · BR-01–BR-16 (aturan bisnis)
-- **Status:** iterasi 1–6 selesai & teruji — **66 test case / 383 pemeriksaan lulus (100%)**
+- **Status:** iterasi 1–6 + Revisi Review LPM (19 Nov 2026) selesai & teruji — **458 pemeriksaan lulus (100%)** (urutan regresi: iterasi-6 → 3 → 4 → 5)
 
 ## Modul
 
 | Modul | Cakupan |
 |---|---|
-| **M1 Dokumen SPMI** | unggah dokumen + masa berlaku, status 🟢🟡🔴 otomatis, versi, alur persetujuan |
+| **M1 Dokumen SPMI** | unggah dokumen + masa berlaku, status 🟢🟡🔴 otomatis, riwayat versi (pengesahan TTD basah di luar sistem) |
 | **M2 Monev** | isian capaian 3-bulanan per unit, unggah bukti, grafik tren per periode |
-| **M3 AMI & Evaluasi** | instrumen fleksibel (jejak perubahan), penilaian auditor 0–4, rekap temuan, formulir kepuasan |
+| **M3 AMI & Evaluasi** | instrumen fleksibel (jejak perubahan), bukti auditee → skor auditor 0–4, rekap temuan, formulir kepuasan 3 jenis + **mode tamu** |
 | **M4 Pengendalian–Peningkatan** | temuan → rencana aksi (PIC, tenggat), unggah bukti, verifikasi Super Admin |
 | **M5 Pendukung** | RBAC, pengguna & unit, notifikasi tenggat (FR-15), ekspor laporan CSV/cetak (FR-14) |
 
-Alur status tindak lanjut: `open → in_progress → done → verified`.
+Alur status tindak lanjut: **Terbuka → Berjalan → Selesai → Terverifikasi** (`open → in_progress → done → verified` — `USULAN-STATUS.md`).
 
 ## Menjalankan
 
 1. Nyalakan XAMPP (Apache + MySQL).
-2. Impor **`sistem/desain/03-database.sql`** ke database `spmi_stikom` — sudah termasuk DDL 26 tabel + *seed* data.
+2. Impor **`sistem/desain/03-database.sql`** ke database `spmi_stikom` — sudah termasuk DDL 25 tabel + *seed* data. (Basis data lama: jalankan `sistem/desain/migrasi-revisi-review-2026-11.sql`.)
 3. Sesuaikan kredensial basis data di **`app/config/config.php`** bila berbeda dari default XAMPP (`root`, sandi kosong).
 4. Buka **`http://localhost/lpm/public/`** (`base_url` mengikuti path folder, jadi nama folder bebas).
 5. Masuk memakai akun uji:
@@ -52,7 +52,7 @@ lpm/
 ## Paket desain (`sistem/desain/`)
 
 - `01-use-case.md` — 31 use case + PlantUML + matriks hak akses
-- `02-erd.md` — 26 entitas, 23 relasi, ERD Mermaid per modul
+- `02-erd.md` — 25 entitas, 22 relasi, ERD Mermaid per modul
 - `03-database.sql` — DDL MySQL lengkap + *seed* (impor dulu!)
 - `04-dfd.md` — DFD Level 0/1 + 20 aliran data + aturan bisnis
 - `05-activity-diagram.md` — 4 diagram aktivitas (PlantUML)
@@ -62,8 +62,8 @@ lpm/
 | Suite | Cakupan | Hasil |
 |---|---|---|
 | `iterasi-6/` | M5 pelengkap — ekspor FR-14, notifikasi FR-15 | 55/55 |
-| `iterasi-3-monev/` | M2 Monev | 65/65 |
-| `iterasi-4-ami/` | M3 AMI & Evaluasi | 162/162 |
+| `iterasi-3-monev/` | M2 Monev (+ Revisi Review LPM) | 79/79 |
+| `iterasi-4-ami/` | M3 AMI & Evaluasi (+ Revisi Review LPM) | 223/223 |
 | `iterasi-5-followup/` | M4 Pengendalian–Peningkatan | 101/101 |
 
 **Cara menjalankan** (butuh MySQL aktif):
@@ -79,4 +79,4 @@ cd sistem/uji/iterasi-4-ami    ; php test-*.php
 cd sistem/uji/iterasi-5-followup ; php test-*.php
 ```
 
-Total regresi: **383/383 pemeriksaan lulus**.
+Total regresi: **458/458 pemeriksaan lulus** (19 Nov 2026 — sebelumnya 383/383).
