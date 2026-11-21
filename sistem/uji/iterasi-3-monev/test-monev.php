@@ -445,7 +445,67 @@ echo "\n=== M. Laporan tidak ada ===\n";
 $r = $admin->get('/monev/reports/999999');
 ok($r['code'] === 404, 'laporan tidak ditemukan → 404');
 
-echo "\n=== N. Pembersihan data uji ===\n";
+echo "\n=== N. Sekop indikator per unit pengisi (masukan LPM foto-1) ===\n";
+$r = $admin->post('/monev/indicators', [
+    '_token'          => $admin->token(),
+    'code'            => 'IND-U3',
+    'name'            => 'Indikator uji bidang keuangan',
+    'standard_id'     => '4',
+    'unit_id'         => '3',
+    'unit_of_measure' => '%',
+    'target'          => '70',
+    'weight'          => '1',
+    'is_active'       => '1',
+]);
+ok(str_contains($r['body'], 'berhasil ditambahkan'), 'indikator dengan unit pengisi dibuat');
+$admin->post('/monev/indicators', [
+    '_token'          => $admin->token(),
+    'code'            => 'IND-U2',
+    'name'            => 'Indikator uji bidang akademik',
+    'standard_id'     => '1',
+    'unit_id'         => '2',
+    'unit_of_measure' => '%',
+    'target'          => '75',
+    'weight'          => '1',
+    'is_active'       => '1',
+]);
+$indU3 = (int)val($pdo, 'SELECT id FROM monev_indicators WHERE code = ?', ['IND-U3']);
+$indU2 = (int)val($pdo, 'SELECT id FROM monev_indicators WHERE code = ?', ['IND-U2']);
+ok($indU3 > 0 && $indU2 > 0, 'kedua indikator unit pengisi tersimpan');
+
+$r = $admin->get('/monev/indicators');
+ok(str_contains($r['body'], 'Unit pengisi') && str_contains($r['body'], 'Semua unit'),
+    'halaman kelola menyediakan pilihan unit pengisi (foto-1)');
+$r = $admin->get("/monev/indicators/{$indU3}/edit");
+ok(str_contains($r['body'], 'value="3" selected'), 'form edit menampilkan unit pengisi terpilih');
+
+$r = $member->get('/monev/report?period_id=1&unit_id=2');
+ok($r['code'] === 200 && str_contains($r['body'], 'IND-U2'), 'indikator unit sendiri tampil pada isian anggota');
+ok(!str_contains($r['body'], 'IND-U3') && !str_contains($r['body'], 'Indikator uji bidang keuangan'),
+    'indikator unit lain TIDAK ikut tampil pada isian (foto-1)');
+
+// Pengajuan — cakupan validasi sama dengan formulir: indikator unit lain
+// tidak diwajibkan dan tidak menerima nilai.
+$scoped = $pdo->query('SELECT id FROM monev_indicators WHERE is_active = 1 AND (unit_id IS NULL OR unit_id = 2)')
+    ->fetchAll(PDO::FETCH_ASSOC);
+$post  = ['_token' => $member->token(), 'period_id' => '1', 'unit_id' => '2', 'submit' => '1'];
+$files = [];
+foreach ($scoped as $sRow) {
+    $sid = (int)$sRow['id'];
+    $post["values[$sid]"]  = '5';
+    $post["notes[$sid]"]   = 'Catatan uji sekop indikator';
+    $files["evidence[$sid]"] = $bukti;
+}
+$r = $member->post('/monev/report', $post, $files);
+ok(str_contains($r['body'], 'diajukan untuk direview'), 'pengajuan tanpa indikator unit lain tetap sah');
+ok((int)val($pdo, 'SELECT COUNT(*) FROM monev_values WHERE indicator_id = ?', [$indU3]) === 0,
+    'indikator unit lain tidak menerima nilai pada laporan anggota');
+
+$pdo->exec("DELETE FROM monev_indicators WHERE code IN ('IND-U2', 'IND-U3')");
+ok((int)val($pdo, 'SELECT COUNT(*) FROM monev_indicators WHERE code IN (?, ?)', ['IND-U2', 'IND-U3']) === 0,
+    'indikator uji sekop dibersihkan');
+
+echo "\n=== O. Pembersihan data uji ===\n";
 $pdo->exec('DELETE FROM monev_values WHERE report_id IN (SELECT id FROM monev_reports WHERE period_id = 1)');
 $pdo->exec('DELETE FROM monev_reports WHERE period_id = 1');
 $pdo->exec('DELETE FROM notifications WHERE ref_table = "monev_reports"');

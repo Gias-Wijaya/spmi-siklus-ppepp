@@ -182,6 +182,8 @@ $r = $admin->get('/ami');
 ok($r['code'] === 200 && str_contains($r['body'], 'Progres penilaian'), 'dasbor AMI terbuka (FR-07/FR-08)');
 ok(str_contains($r['body'], 'chartUnits') && str_contains($r['body'], 'chartStd'), 'grafik skor per unit & standar tampil');
 ok(str_contains($r['body'], 'Formulir kepuasan'), 'ringkasan kepuasan tampil di dasbor');
+ok(str_contains($r['body'], 'Kelola Instrumen') && str_contains($r['body'], '/ami/instruments'),
+    'pintasan Kelola Instrumen (indikator) tampil di dasbor AMI (masukan LPM foto-3)');
 ok(str_contains($r['body'], 'Skor per standar — rata-rata (skala 0–4)'), 'judul grafik standar = rata-rata skala 0–4 tanpa "gap" (foto-05)');
 ok(!str_contains($r['body'], 'gap dari skor penuh'), 'judul lama "gap dari skor penuh 4" dihapus (foto-05)');
 ok(str_contains($r['body'], 'Belum ada penilaian'), 'grafik tanpa penilaian menampilkan "Belum ada penilaian" (foto-05)');
@@ -189,6 +191,7 @@ ok(str_contains($r['body'], '"S8"'), 'sumbu grafik standar lengkap — seluruh s
 
 $r = $member->get('/ami');
 ok($r['code'] === 200, 'anggota dapat melihat dasbor AMI');
+ok(!str_contains($r['body'], 'Kelola Instrumen'), 'pintasan kelola instrumen tidak tampil untuk anggota (RBAC)');
 
 $r = $member->get('/ami/report');
 ok($r['code'] === 403, 'anggota ditolak membuka laporan AMI (403)');
@@ -769,6 +772,8 @@ ok(strlen($token) === 40, 'token tamu dibuat (40 karakter hex)');
 ok((int)val($pdo, 'SELECT guest_enabled FROM satisfaction_surveys WHERE id = ?', [$sv]) === 1, 'flag guest_enabled = 1');
 $r = $admin->get('/ami/satisfaction');
 ok(str_contains($r['body'], '/puas/' . $token), 'tautan tamu tampil pada daftar formulir (siap disalin)');
+ok(preg_match('#value="https?://[^"]*/puas/' . preg_quote($token, '#') . '"#', $r['body']) === 1,
+    'tautan tamu berupa URL lengkap siap dibagikan (masukan LPM foto-4)');
 
 // Halaman tamu — tanpa login.
 @unlink($tmp . '/tamu.txt');
@@ -780,15 +785,29 @@ ok(str_contains($g['body'], '>Ya</label>'), 'opsi pilihan tampil pada halaman ta
 $g = $guest->get('/puas/token-salah-tidak-ada');
 ok($g['code'] === 404, 'token salah → 404');
 
+// Masukan LPM foto-2 — aktifkan kembali pertanyaan isian $qT (sebelumnya
+// dinonaktifkan pada langkah "pertanyaan berjawab") agar uji isian wajib
+// tamu punya sasaran teks aktif; produk hanya memvalidasi yang aktif.
+$pdo->exec('UPDATE satisfaction_questions SET is_active = 1 WHERE id = ' . $qT);
+ok(val($pdo, 'SELECT is_active FROM satisfaction_questions WHERE id = ?', [$qT]) == 1,
+    'pertanyaan isian diaktifkan kembali untuk uji tamu (foto-2)');
+
 // Kirim tanpa memilih pilihan → ditolak.
 $g = $guest->post("/puas/{$token}", ['_token' => $guest->token()] + flat('answers', [$qA => '4', $qB => '5']));
 ok(str_contains($g['body'], 'pilihan wajib dipilih'), 'jawaban pilihan wajib dipilih (Item 11)');
 ok((int)val($pdo, 'SELECT COUNT(*) FROM satisfaction_responses WHERE survey_id = ? AND respondent_user_id IS NULL', [$sv]) === 0,
     'respons tamu belum tercatat saat validasi gagal');
 
-// Kirim lengkap → respons "Tamu".
+// Kirim pilihan terjawab tapi isian teks kosong → ditolak (masukan LPM foto-2).
 $g = $guest->post("/puas/{$token}", ['_token' => $guest->token()]
     + flat('answers', [$qA => '4', $qB => '5', $qP => 'Ya']));
+ok(str_contains($g['body'], 'isian wajib diisi'), 'isian teks kosong ditolak — skala & pilihan saja tidak cukup (foto-2)');
+ok((int)val($pdo, 'SELECT COUNT(*) FROM satisfaction_responses WHERE survey_id = ? AND respondent_user_id IS NULL', [$sv]) === 0,
+    'respons tamu belum tercatat saat isian teks kosong');
+
+// Kirim lengkap → respons "Tamu".
+$g = $guest->post("/puas/{$token}", ['_token' => $guest->token()]
+    + flat('answers', [$qA => '4', $qB => '5', $qP => 'Ya', $qT => 'Masukan tamu untuk uji']));
 ok(str_contains($g['body'], 'Terima kasih'), 'jawaban tamu tersimpan (Item 12)');
 $gResp = row($pdo, 'SELECT id, respondent_user_id FROM satisfaction_responses WHERE survey_id = ? ORDER BY id DESC LIMIT 1', [$sv]);
 ok($gResp !== null && $gResp['respondent_user_id'] === null, 'respons tamu tanpa akun (respondent_user_id NULL)');

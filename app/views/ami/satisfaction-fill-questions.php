@@ -11,6 +11,8 @@
 
     <?php if (!$questions): ?>
         <div class="alert alert-info">Formulir belum memiliki pertanyaan.</div>
+    <?php else: ?>
+        <div class="form-text mb-3">Semua pertanyaan bertanda <span class="text-danger">*</span> wajib diisi — skala, pilihan, maupun isian teks.</div>
     <?php endif; ?>
 
     <?php foreach ($questions as $i => $q): ?>
@@ -25,6 +27,7 @@
                     <?php else: ?>
                         <span class="badge text-bg-light border ms-1">Teks — isian singkat/feedback/saran</span>
                     <?php endif; ?>
+                    <span class="text-danger small" title="wajib diisi">*</span>
                 </div>
 
                 <?php if ($q['type'] === 'skala'): ?>
@@ -52,8 +55,9 @@
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
+                    <!-- Masukan LPM foto-2 — isian wajib diisi; browser menolak kiriman kosong. -->
                     <textarea name="answers[<?= (int)$q['id'] ?>]" rows="3" class="form-control"
-                              placeholder="Tuliskan masukan Anda…"></textarea>
+                              placeholder="Tuliskan masukan Anda…" required></textarea>
                 <?php endif; ?>
             </div>
         </div>

@@ -52,6 +52,19 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit pengisi</label>
+                        <select name="unit_id" class="form-select<?= $err('unit_id') ?>">
+                            <option value="0">— Semua unit —</option>
+                            <?php foreach ($units as $u): ?>
+                                <option value="<?= (int)$u['id'] ?>" <?= old('unit_id') === (string)$u['id'] ? 'selected' : '' ?>>
+                                    <?= e($u['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if (isset($errors['unit_id'])): ?><div class="invalid-feedback"><?= e($errors['unit_id']) ?></div><?php endif; ?>
+                        <div class="form-text">Semua unit mengisi indikator ini; pilih unit bila hanya unit tertentu yang mengisi.</div>
+                    </div>
                     <div class="row">
                         <div class="col-4 mb-3">
                             <label class="form-label">Satuan</label>
@@ -86,6 +99,7 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                         <th>Kode</th>
                         <th>Indikator</th>
                         <th>Standar</th>
+                        <th>Unit pengisi</th>
                         <th class="text-end">Target</th>
                         <th class="text-end">Bobot</th>
                         <th>Status</th>
@@ -94,13 +108,14 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                     </thead>
                     <tbody>
                     <?php if (!$indicators): ?>
-                        <tr><td colspan="7" class="text-muted">Belum ada indikator.</td></tr>
+                        <tr><td colspan="8" class="text-muted">Belum ada indikator.</td></tr>
                     <?php endif; ?>
                     <?php foreach ($indicators as $i): ?>
                         <tr>
                             <td><code><?= e($i['code']) ?></code></td>
                             <td class="small"><?= e($i['name']) ?></td>
                             <td class="small"><?= e($i['standard_name'] ?? '—') ?></td>
+                            <td class="small"><?= e($i['unit_name'] ?? 'Semua unit') ?></td>
                             <td class="text-end"><?= e($i['target']) ?> <?= e($i['unit_of_measure'] ?? '') ?></td>
                             <td class="text-end"><?= e($i['weight']) ?></td>
                             <td>

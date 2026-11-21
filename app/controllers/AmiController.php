@@ -1424,6 +1424,18 @@ final class AmiController extends Controller
             }
         }
 
+        // Masukan LPM foto-2 — pertanyaan isian (teks) juga wajib diisi,
+        // bukan sekadar skala & pilihan; isian kosong tidak boleh terkirim.
+        foreach ($questions as $q) {
+            if ($q['type'] !== 'teks') {
+                continue;
+            }
+            if (trim((string)($answers[(int)$q['id']] ?? '')) === '') {
+                flash('danger', 'Semua pertanyaan isian wajib diisi.');
+                $this->redirect('/ami/satisfaction/' . (int)$id . '/fill');
+            }
+        }
+
         $responseId = SatisfactionResponse::create([
             'survey_id'         => (int)$id,
             'respondent_user_id' => Auth::id(),
@@ -1493,7 +1505,7 @@ final class AmiController extends Controller
         }
         SatisfactionSurvey::updateById((int)$id, ['guest_token' => $token, 'guest_enabled' => 1]);
         audit('update', 'satisfaction_surveys', (int)$id, ['guest_enabled' => 1]);
-        flash('success', 'Tautan tamu aktif — bagikan ke responden: ' . url('/puas/' . $token));
+        flash('success', 'Tautan tamu aktif — bagikan ke responden: ' . absolute_url('/puas/' . $token));
         $this->redirect('/ami/satisfaction');
     }
 
@@ -1549,6 +1561,18 @@ final class AmiController extends Controller
             if ($q['type'] === 'pilihan'
                 && ($val === '' || !in_array($val, SatisfactionQuestion::optionsOf($q), true))) {
                 flash('danger', 'Semua pertanyaan pilihan wajib dipilih salah satu opsi.');
+                $this->redirect('/puas/' . $token);
+            }
+        }
+
+        // Masukan LPM foto-2 — pertanyaan isian (teks) juga wajib diisi,
+        // bukan sekadar skala & pilihan; isian kosong tidak boleh terkirim.
+        foreach ($questions as $q) {
+            if ($q['type'] !== 'teks') {
+                continue;
+            }
+            if (trim((string)($answers[(int)$q['id']] ?? '')) === '') {
+                flash('danger', 'Semua pertanyaan isian wajib diisi.');
                 $this->redirect('/puas/' . $token);
             }
         }

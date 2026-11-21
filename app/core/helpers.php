@@ -21,6 +21,17 @@ function url(string $path = ''): string
 }
 
 /**
+ * URL lengkap (protokol + host) — untuk tautan yang dibagikan ke luar,
+ * mis. tautan tamu /puas/{token} (masukan LPM foto-4: salin → langsung bisa dibagikan).
+ */
+function absolute_url(string $path = ''): string
+{
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host   = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+    return $scheme . '://' . $host . url($path);
+}
+
+/**
  * Cari berkas logo institusi di public/assets/img/ (urut prioritas).
  * Return nama berkas (mis. "logo.png") atau null bila belum ada.
  */

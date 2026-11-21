@@ -2,6 +2,7 @@
 /**
  * M2 — Formulir isian capaian Monev per unit per periode (FR-04).
  * @var array $period @var array $unit @var array $indicators @var array $values @var array $errors
+ * Indikator di sini sudah disekop per unit pengisi (masukan LPM foto-1).
  */
 $valuesMap = [];
 foreach ($values as $v) {
@@ -102,6 +103,6 @@ $isSuper = Auth::isSuperAdmin();
     <div class="text-muted small mb-4">
         Draf dapat disunting kapan saja selama periode terbuka; setelah diajukan, LPM akan mereview
         <?= $isSuper ? '(Anda dapat menyetujui/mengembalikan sebagai LPM).' : 'dan memberi kabar melalui notifikasi.' ?>
-        <br>Sebelum diajukan, <strong>seluruh indikator</strong> wajib lengkap: nilai aktual + bukti pendukung + catatan.
+        <br>Sebelum diajukan, <strong>seluruh indikator pada formulir ini</strong> wajib lengkap: nilai aktual + bukti pendukung + catatan.
     </div>
 </form>

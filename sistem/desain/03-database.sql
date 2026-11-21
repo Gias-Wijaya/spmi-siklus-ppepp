@@ -180,6 +180,7 @@ CREATE TABLE `monev_periods` (
 CREATE TABLE `monev_indicators` (
   `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `standard_id`     INT UNSIGNED NULL,
+  `unit_id`         INT UNSIGNED NULL,             -- unit pengisi (NULL = semua unit)
   `code`            VARCHAR(20) NOT NULL,
   `name`            VARCHAR(200) NOT NULL,
   `unit_of_measure` VARCHAR(40) NULL,             -- %, jumlah, skor
@@ -188,7 +189,9 @@ CREATE TABLE `monev_indicators` (
   `is_active`       TINYINT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   KEY `idx_mi_std` (`standard_id`),
-  CONSTRAINT `fk_mi_std` FOREIGN KEY (`standard_id`) REFERENCES `standards` (`id`) ON DELETE SET NULL
+  KEY `idx_mi_unit` (`unit_id`),
+  CONSTRAINT `fk_mi_std` FOREIGN KEY (`standard_id`) REFERENCES `standards` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_mi_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `monev_reports` (

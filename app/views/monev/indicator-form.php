@@ -1,7 +1,7 @@
 <?php
 /**
  * M2 — Formulir edit indikator Monev (Super Admin).
- * @var array $indicator @var array $standards @var array $errors
+ * @var array $indicator @var array $standards @var array $units @var array $errors
  */
 $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invalid' : '';
 ?>
@@ -53,6 +53,19 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unit pengisi</label>
+                        <select name="unit_id" class="form-select<?= $err('unit_id') ?>">
+                            <option value="0">— Semua unit —</option>
+                            <?php foreach ($units as $u): ?>
+                                <option value="<?= (int)$u['id'] ?>" <?= (int)($indicator['unit_id'] ?? 0) === (int)$u['id'] ? 'selected' : '' ?>>
+                                    <?= e($u['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if (isset($errors['unit_id'])): ?><div class="invalid-feedback"><?= e($errors['unit_id']) ?></div><?php endif; ?>
+                        <div class="form-text">Semua unit mengisi indikator ini; pilih unit bila hanya unit tertentu yang mengisi.</div>
                     </div>
                     <div class="row">
                         <div class="col-4 mb-3">

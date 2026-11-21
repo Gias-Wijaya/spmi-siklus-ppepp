@@ -42,6 +42,14 @@ $totalAnswers = array_sum(array_map(static fn ($s) => (int)$s['response_count'],
             </select>
             <button class="btn btn-sm btn-outline-secondary" type="submit">Tampilkan</button>
         </form>
+        <?php if ($isSuper): ?>
+            <!-- Masukan LPM foto-3 — pintasan kelola instrumen (indikator) AMI, seperti Kelola Indikator di Monev. -->
+            <a class="btn btn-sm btn-outline-primary"
+               href="<?= e(url('/ami/instruments')) ?>"
+               title="Tambah, ubah, dan nonaktifkan instrumen (indikator) AMI per jadwal">
+                <i class="bi bi-sliders me-1"></i>Kelola Instrumen
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 

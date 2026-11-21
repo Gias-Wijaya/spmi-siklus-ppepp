@@ -256,6 +256,7 @@ final class MonevController extends Controller
             'title'      => 'Kelola Indikator Monev',
             'indicators' => MonevIndicator::withStandard(),
             'standards'  => Standard::active(),
+            'units'      => Unit::active(),
             'errors'     => [],
         ]);
     }
@@ -273,6 +274,7 @@ final class MonevController extends Controller
                 'title'      => 'Kelola Indikator Monev',
                 'indicators' => MonevIndicator::withStandard(),
                 'standards'  => Standard::active(),
+                'units'      => Unit::active(),
                 'errors'     => $errors,
             ]);
         }
@@ -296,6 +298,7 @@ final class MonevController extends Controller
             'title'      => 'Edit Indikator Monev',
             'indicator'  => $indicator,
             'standards'  => Standard::active(),
+            'units'      => Unit::active(),
             'errors'     => [],
         ]);
     }
@@ -318,6 +321,7 @@ final class MonevController extends Controller
                 'title'      => 'Edit Indikator Monev',
                 'indicator'  => array_merge($indicator, $data),
                 'standards'  => Standard::active(),
+                'units'      => Unit::active(),
                 'errors'     => $errors,
             ]);
         }
@@ -331,11 +335,13 @@ final class MonevController extends Controller
     private function indicatorPayload(): array
     {
         $standardId = (int)($_POST['standard_id'] ?? 0);
+        $unitId     = (int)($_POST['unit_id'] ?? 0);
 
         return [
             'code'            => trim((string)($_POST['code'] ?? '')),
             'name'            => trim((string)($_POST['name'] ?? '')),
             'standard_id'     => $standardId > 0 ? $standardId : null,
+            'unit_id'         => $unitId > 0 ? $unitId : null,
             'unit_of_measure' => trim((string)($_POST['unit_of_measure'] ?? '')) ?: null,
             'target'          => (float)($_POST['target'] ?? 0),
             'weight'          => (float)($_POST['weight'] ?? 1),
@@ -353,6 +359,9 @@ final class MonevController extends Controller
         }
         if ($data['name'] === '') {
             $errors['name'] = 'Nama indikator wajib diisi.';
+        }
+        if (($data['unit_id'] ?? 0) && !Unit::find((int)$data['unit_id'])) {
+            $errors['unit_id'] = 'Unit pengisi tidak ditemukan.';
         }
         if ($data['target'] <= 0) {
             $errors['target'] = 'Target harus lebih besar dari 0.';
@@ -396,7 +405,8 @@ final class MonevController extends Controller
             'title'      => 'Isi Capaian Monev',
             'period'     => $period,
             'unit'       => $unit,
-            'indicators' => MonevIndicator::active(),
+            // Masukan LPM foto-1 — isian hanya indikator milik unit ini / semua unit.
+            'indicators' => MonevIndicator::activeForUnit((int)$unit['id']),
             'values'     => $existing ? MonevValue::forReport((int)$existing['id']) : [],
             'errors'     => [],
         ]);
@@ -422,7 +432,9 @@ final class MonevController extends Controller
             $this->redirect('/monev');
         }
 
-        $indicators = MonevIndicator::active();
+        // Wajib lengkap sebelum diajukan: nilai + bukti + catatan.
+        // Masukan LPM foto-1 — cakupan identik dengan yang tampil pada formulir.
+        $indicators = MonevIndicator::activeForUnit($unitId);
         $rawValues  = is_array($_POST['values'] ?? null) ? $_POST['values'] : [];
         $rawNotes   = is_array($_POST['notes'] ?? null) ? $_POST['notes'] : [];
 

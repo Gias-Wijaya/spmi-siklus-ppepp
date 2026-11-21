@@ -84,10 +84,10 @@ $statusBadge = static function (string $status): string {
                                 <td class="small">
                                     <strong><?= e($s['name']) ?></strong>
                                     <?php if ((int)$s['guest_enabled'] === 1 && !empty($s['guest_token'])): ?>
-                                        <!-- Item 12 — tautan mode tamu aktif: siap disalin. -->
+                                        <!-- Item 12 + masukan LPM foto-4 — tautan tamu URL lengkap, siap disalin. -->
                                         <div class="input-group input-group-sm mt-1">
                                             <input class="form-control form-control-sm" readonly
-                                                   value="<?= e(url('/puas/' . $s['guest_token'])) ?>">
+                                                   value="<?= e(absolute_url('/puas/' . $s['guest_token'])) ?>">
                                             <button class="btn btn-outline-secondary" type="button"
                                                     onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.textContent='Tersalin';">
                                                 Salin
