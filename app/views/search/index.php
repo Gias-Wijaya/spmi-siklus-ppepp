@@ -28,7 +28,7 @@ $hl = static function (string $text, string $q): string {
         <form method="get" action="<?= e(url('/search')) ?>" role="search" class="row g-2">
             <div class="col">
                 <input class="form-control" type="search" name="q" value="<?= e($q) ?>"
-                       placeholder="Judul, nomor dokumen, atau uraian temuan…" autofocus
+                       placeholder="Judul, nomor, versi, kategori, atau uraian temuan…" autofocus
                        aria-label="Kata kunci pencarian">
             </div>
             <div class="col-auto">

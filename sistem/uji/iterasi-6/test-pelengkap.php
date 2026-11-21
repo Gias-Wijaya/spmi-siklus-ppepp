@@ -11,7 +11,8 @@ declare(strict_types=1);
  *  C. Ekspor laporan AMI (RBAC) & rencana aksi (saringan + PIC)
  *  D. Cetak/PDF halaman laporan
  *  E. Notifikasi tenggat (FR-15)
- *  F. Pembersihan data uji & pembanding baseline
+ *  F. Pencarian global lintas modul (paritas medan dengan daftar modul)
+ *  G. Pembersihan data uji & pembanding baseline
  *
  * Urutan pengujian: jalankan skrip ini lebih dulu sebelum suite iterasi 3–5 —
  * skrip ini sekaligus pemanasan penjaga tenggat atas data benih, sehingga
@@ -395,9 +396,77 @@ $after = (int)val($pdo, "SELECT COUNT(*) FROM notifications WHERE type = 'tengga
 ok($before === $after && $before > $baselineTenggat,
     'jumlah notifikasi tenggat stabil pada permintaan ulang (tidak dobel)');
 
-/* ============================================ F. Pembersihan data uji & baseline === */
+/* ============================================ F. Pencarian global lintas modul === */
 
-echo "\n=== F. Pembersihan data uji ===\n";
+echo "\n=== F. Pencarian global ===\n";
+
+// Paritas medan: daftar dokumen mencari versi — global ikut mencarinya
+// (regresi: sebelumnya q=2.0 → modul menemukan, global "Tidak ada hasil").
+$r = $admin->get('/search?q=' . rawurlencode('2.0'));
+ok(str_contains($r['body'], 'RPS Informatika') && !str_contains($r['body'], 'Tidak ada hasil'),
+    'global menemukan dokumen lewat versi (q=2.0) — paritas dengan modul');
+ok(str_contains($r['body'], 'badge text-bg-primary">1<'), 'hasil q=2.0 tepat satu dokumen');
+$r = $admin->get('/documents?q=' . rawurlencode('2.0'));
+ok(str_contains($r['body'], 'RPS Informatika'), 'pembanding: daftar modul juga menemukan q=2.0');
+
+// Metadata yang tampil di daftar modul ikut tercari: kategori dokumen.
+$r = $admin->get('/search?q=' . rawurlencode('Pedoman SPMI'));
+ok(str_contains($r['body'], 'Pedoman Penjaminan Mutu Internal'),
+    'global menemukan dokumen lewat nama kategori');
+
+// Temuan: nama jadwal & nama unit ikut tercari.
+$r = $admin->get('/search?q=' . rawurlencode('AMI UJI FR14'));
+ok(str_contains($r['body'], 'Temuan uji FR14/FR15') && !str_contains($r['body'], 'Tidak ada hasil'),
+    'global menemukan temuan lewat nama jadwal');
+ok(str_contains($r['body'], 'badge text-bg-warning">1<'), 'grup temuan menampilkan satu padanan');
+
+$r = $admin->get('/search?q=' . rawurlencode('Bidang Akademik'));
+ok(str_contains($r['body'], 'Temuan uji FR14/FR15'), 'global menemukan temuan lewat nama unit');
+ok(str_contains($r['body'], 'Rencana uji admin') && str_contains($r['body'], 'Rencana uji member'),
+    'rencana aksi ikut tercari lewat nama unit (Super Admin)');
+
+// Rencana aksi: nama PIC ikut tercari + cakupan RBAC tetap berlaku.
+$r = $admin->get('/search?q=' . rawurlencode('Waket I Akademik'));
+ok(str_contains($r['body'], 'Rencana uji member'), 'global menemukan rencana aksi lewat nama PIC');
+$r = $member->get('/search?q=' . rawurlencode('Waket I Akademik'));
+ok(str_contains($r['body'], 'Rencana uji member') && !str_contains($r['body'], 'Rencana uji admin'),
+    'anggota pencarian nama PIC hanya memunculkan rencana aksi miliknya');
+
+$r = $admin->get('/search?q=' . rawurlencode('Rencana uji'));
+$plain = strip_tags($r['body']); // sorotan <mark> memotong substring — periksa teks polos
+ok(str_contains($plain, 'Rencana uji admin') && str_contains($plain, 'Rencana uji member'),
+    'Super Admin melihat seluruh rencana aksi pada pencarian global');
+ok(str_contains($r['body'], 'badge text-bg-primary">2<'), 'badge rencana aksi menghitung dua padanan');
+$r = $member->get('/search?q=' . rawurlencode('Rencana uji'));
+$plain = strip_tags($r['body']);
+ok(!str_contains($plain, 'Rencana uji admin') && str_contains($plain, 'Rencana uji member'),
+    'Anggota pencarian "Rencana uji" hanya memunculkan miliknya');
+ok(str_contains($r['body'], 'badge text-bg-primary">1<'), 'badge anggota menghitung satu rencana aksinya');
+
+// Perilaku lama yang tetap dipertahankan.
+$r = $admin->get('/search?q=sop');
+$plain = strip_tags($r['body']);
+ok(str_contains($plain, 'SOP Evaluasi Dosen'), 'pencarian tidak peka huruf besar/kecil');
+ok(str_contains($r['body'], '<mark class="search-hit">SOP</mark>'), 'sorot kata kunci aktif pada hasil');
+$r = $admin->get('/search?q=PPEPP');
+ok(str_contains($r['body'], 'Pedoman Penjaminan Mutu Internal'), 'uraian dokumen tetap ikut tercari');
+$r = $admin->get('/search?q=' . rawurlencode('zzz kata tak ada'));
+ok(str_contains($r['body'], 'Tidak ada hasil untuk'), 'kueri tanpa padanan menampilkan keadaan kosong');
+$r = $admin->get('/search');
+ok(str_contains($r['body'], 'Mulai mengetik untuk mencari'), 'kueri kosong menampilkan ajakan mengetik');
+
+// Keamanan: kueri mentah tidak menyuntikkan HTML.
+$r = $admin->get('/search?q=' . rawurlencode('<script>alert(1)</script>'));
+ok(!str_contains($r['body'], '<script>alert(1)</script>'), 'kueri berisi tag tidak disuntikkan mentah');
+ok(str_contains($r['body'], '&lt;script&gt;'), 'kueri berisi tag ditampilkan sebagai teks aman');
+
+// Tamu: pencarian global tetap di balik halaman masuk.
+$r = $guest->get('/search?q=SOP');
+ok(str_contains($r['url'], '/login'), 'pengunjung pencarian global → dialihkan ke halaman masuk');
+
+/* ============================================ G. Pembersihan data uji & baseline === */
+
+echo "\n=== G. Pembersihan data uji ===\n";
 
 $pdo->prepare("DELETE FROM notifications
                 WHERE (ref_table = 'documents'     AND ref_id IN (?, ?))
