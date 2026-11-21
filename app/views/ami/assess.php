@@ -90,7 +90,7 @@ foreach ($instruments as $i) {
                 <th style="width:70px" class="text-center">Bobot</th>
                 <th style="width:180px">Skor</th>
                 <th style="width:240px">Catatan temuan</th>
-                <th style="width:150px">Bukti</th>
+                <th style="width:300px">Bukti</th>
             </tr>
             </thead>
             <tbody>
