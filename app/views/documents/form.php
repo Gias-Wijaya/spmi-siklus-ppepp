@@ -61,19 +61,39 @@ $formTitle = $isEdit ? 'Ubah Metadata Dokumen' : 'Unggah Dokumen SPMI';
 
                 <div class="col-md-3">
                     <label class="form-label">Unit pemilik</label>
+                    <?php
+                    // Review LPM 25 Nov (B1): pemilik dokumen ditampilkan sebagai
+                    // peran — LPM, Waket 1–3 — bukan nama bidang; urut LPM lalu W1–W3.
+                    $unitRole = static function (array $u): string {
+                        $code = (string)($u['code'] ?? '');
+                        if ($code === 'LPM') {
+                            return 'LPM';
+                        }
+                        return preg_match('/^W(\d+)$/', $code, $m) === 1 ? 'Waket ' . $m[1] : (string)$u['name'];
+                    };
+                    $ownerUnits = $units;
+                    usort($ownerUnits, static fn (array $a, array $b) => strcmp((string)$a['code'], (string)$b['code']));
+                    $ownLabel = (string)(Auth::user()['unit_name'] ?? '—');
+                    foreach ($ownerUnits as $u) {
+                        if ((int)$u['id'] === (int)(Auth::unitId() ?? 0)) {
+                            $ownLabel = $unitRole($u);
+                            break;
+                        }
+                    }
+                    ?>
                     <?php if ($isSuper): ?>
                         <select class="form-select <?= isset($errors['unit_id']) ? 'is-invalid' : '' ?>" name="unit_id">
                             <option value="">— pilih unit —</option>
-                            <?php foreach ($units as $u): ?>
+                            <?php foreach ($ownerUnits as $u): ?>
                                 <option value="<?= (int)$u['id'] ?>"
                                     <?= (int)($doc['unit_id'] ?? 0) === (int)$u['id'] || old('unit_id') === (string)$u['id'] ? 'selected' : '' ?>>
-                                    <?= e($u['name']) ?>
+                                    <?= e($unitRole($u)) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     <?php else: ?>
                         <input class="form-control" type="text" readonly
-                               value="<?= e(Auth::user()['unit_name'] ?? '—') ?>">
+                               value="<?= e($ownLabel) ?>">
                         <input type="hidden" name="unit_id" value="<?= (int)(Auth::unitId() ?? 0) ?>">
                     <?php endif; ?>
                 </div>

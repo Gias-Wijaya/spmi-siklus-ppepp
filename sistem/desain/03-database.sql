@@ -463,7 +463,7 @@ INSERT INTO `units` (`code`, `name`, `description`) VALUES
 INSERT INTO `users` (`unit_id`, `name`, `email`, `password`, `role`) VALUES
 (1, 'Admin LPM', 'admin@stikomelrahma.ac.id', '$2y$10$REPLACE_DENGAN_HASH_PASSWORD', 'super_admin');
 
--- Standar SPMI (mengacu SN Dikti)
+-- Standar SPMI (mengacu SN Dikti + masukan review LPM 25 Nov: S9 Kerjasama)
 INSERT INTO `standards` (`code`, `name`, `category`) VALUES
 ('S1', 'Standar Pendidikan',               'Akademik'),
 ('S2', 'Standar Penelitian',               'Tri Dharma'),
@@ -472,7 +472,8 @@ INSERT INTO `standards` (`code`, `name`, `category`) VALUES
 ('S5', 'Standar Sarana dan Prasarana',     'Operasional'),
 ('S6', 'Standar Pembiayaan',               'Operasional'),
 ('S7', 'Standar Penjaminan Mutu Internal', 'Penjaminan Mutu'),
-('S8', 'Standar Data dan Informasi',       'Operasional');
+('S8', 'Standar Data dan Informasi',       'Operasional'),
+('S9', 'Standar Kerjasama',                'Operasional');
 
 -- Hierarki dokumen SPMI
 INSERT INTO `document_categories` (`parent_id`, `name`, `level`, `sort_order`) VALUES

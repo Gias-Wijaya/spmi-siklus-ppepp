@@ -230,6 +230,8 @@ ok(val($pdo, 'SELECT status FROM ami_schedules WHERE id = ?', [$sid]) === 'runni
 echo "\n=== C. Instrumen fleksibel + jejak perubahan (FR-06, RM 3) ===\n";
 $r = $admin->get("/ami/instruments?schedule_id={$sid}");
 ok($r['code'] === 200 && str_contains($r['body'], 'Tambah indikator'), 'halaman instrumen terbuka');
+ok(str_contains($r['body'], 'Kembali ke dasbor'),
+    'halaman instrumen AMI memiliki pintasan kembali ke dasbor (B5)');
 
 $r = $admin->post('/ami/instruments', [
     '_token'       => $admin->token(),

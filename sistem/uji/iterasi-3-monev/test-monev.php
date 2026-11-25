@@ -243,6 +243,21 @@ $r = $admin->post("/monev/indicators/{$ind99}", [
 ok(str_contains($r['body'], 'berhasil diperbarui'), 'indikator diperbarui');
 ok(val($pdo, 'SELECT target FROM monev_indicators WHERE id = ?', [$ind99]) === '60.00', 'perubahan target tersimpan');
 
+// Review LPM 25 Nov (B4): edit target ber satuan % melebihi 100 juga ditolak.
+$r = $admin->post("/monev/indicators/{$ind99}", [
+    '_token'          => $admin->token(),
+    'code'           => 'IND-99',
+    'name'           => 'Indikator uji coba',
+    'standard_id'    => '1',
+    'unit_of_measure'=> '%',
+    'target'         => '120',
+    'weight'         => '2',
+    'is_active'      => '1',
+]);
+ok(str_contains($r['body'], 'maksimal 100'), 'edit target satuan % > 100 ditolak (B4)');
+ok(val($pdo, 'SELECT target FROM monev_indicators WHERE id = ?', [$ind99]) === '60.00',
+    'target tidak berubah setelah penolakan (B4)');
+
 $r = $admin->post('/monev/indicators', [
     '_token'      => $admin->token(),
     'code'        => 'M1.1', // sudah ada pada seed
@@ -252,6 +267,21 @@ $r = $admin->post('/monev/indicators', [
     'is_active'   => '1',
 ]);
 ok(str_contains($r['body'], 'sudah dipakai'), 'kode indikator ganda ditolak');
+
+// Review LPM 25 Nov (B4): indikator baru ber satuan % dengan target > 100 ditolak.
+$r = $admin->post('/monev/indicators', [
+    '_token'          => $admin->token(),
+    'code'            => 'IND-B4',
+    'name'            => 'Target persen melebihi 100',
+    'standard_id'     => '1',
+    'unit_of_measure' => '%',
+    'target'          => '120',
+    'weight'          => '1',
+    'is_active'       => '1',
+]);
+ok(str_contains($r['body'], 'maksimal 100'), 'target satuan % > 100 ditolak (B4)');
+ok((int)val($pdo, 'SELECT COUNT(*) FROM monev_indicators WHERE code = ?', ['IND-B4']) === 0,
+    'indikator target 120% tidak tersimpan (B4)');
 
 echo "\n=== E. Isian capaian unit (FR-04) — Super Admin ===\n";
 $r = $admin->get('/monev/report?period_id=1&unit_id=1');
@@ -290,6 +320,16 @@ ok(str_contains($r['body'], 'wajib lengkap sebelum diajukan'),
     'pengajuan tanpa kelengkapan ditolak — setiap indikator wajib nilai+bukti+catatan (foto-02)');
 ok(val($pdo, 'SELECT status FROM monev_reports WHERE id = ?', [$adminReport]) === 'draft',
     'laporan tetap draf setelah pengajuan ditolak');
+
+// Review LPM 25 Nov (B4): nilai isian ber satuan % melebihi 100 ditolak.
+$r = $admin->post('/monev/report', [
+    '_token'    => $admin->token(),
+    'period_id' => '1',
+    'unit_id'   => '1',
+] + flat('values', ['1' => '150']) + flat('notes', ['1' => 'Nilai persen melebihi 100']));
+ok(str_contains($r['body'], 'maksimal 100'), 'nilai satuan % > 100 ditolak pada isian (B4)');
+ok((string)val($pdo, 'SELECT value FROM monev_values WHERE report_id = ? AND indicator_id = 1', [$adminReport]) === '90.00',
+    'nilai tersimpan tidak berubah setelah penolakan (B4)');
 
 // Pengajuan lengkap: seluruh indikator aktif (termasuk IND-99) + bukti + catatan.
 $k = (string)$ind99;
@@ -478,6 +518,19 @@ ok(str_contains($r['body'], 'Unit pengisi') && str_contains($r['body'], 'Semua u
     'halaman kelola menyediakan pilihan unit pengisi (foto-1)');
 $r = $admin->get("/monev/indicators/{$indU3}/edit");
 ok(str_contains($r['body'], 'value="3" selected'), 'form edit menampilkan unit pengisi terpilih');
+
+// Review LPM 25 Nov (B3): dropdown filter unit pada dasbor menyaring daftar
+// indikator — indikator unit lain tidak ikut tampil, indikator semua unit tetap ada.
+$r = $admin->get('/monev?period_id=1');
+ok(str_contains($r['body'], 'IND-U2') && str_contains($r['body'], 'IND-U3'),
+    'tanpa filter, indikator seluruh unit tampil (B3)');
+$r = $admin->get('/monev?period_id=1&unit_id=2');
+ok(str_contains($r['body'], 'IND-U2') && !str_contains($r['body'], 'IND-U3'),
+    'filter unit 2 menampilkan indikator unit 2 saja (B3)');
+ok(str_contains($r['body'], 'M1.1'), 'indikator semua unit tetap tampil pada filter (B3)');
+$r = $admin->get('/monev?period_id=1&unit_id=3');
+ok(str_contains($r['body'], 'IND-U3') && !str_contains($r['body'], 'IND-U2'),
+    'filter unit 3 menampilkan indikator unit 3 saja (B3)');
 
 $r = $member->get('/monev/report?period_id=1&unit_id=2');
 ok($r['code'] === 200 && str_contains($r['body'], 'IND-U2'), 'indikator unit sendiri tampil pada isian anggota');

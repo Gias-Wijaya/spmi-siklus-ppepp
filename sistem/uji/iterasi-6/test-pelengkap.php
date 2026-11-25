@@ -12,7 +12,8 @@ declare(strict_types=1);
  *  D. Cetak/PDF halaman laporan
  *  E. Notifikasi tenggat (FR-15)
  *  F. Pencarian global lintas modul (paritas medan dengan daftar modul)
- *  G. Pembersihan data uji & pembanding baseline
+ *  G. Masukan review LPM 25 Nov (B1–B2)
+ *  H. Pembersihan data uji & pembanding baseline
  *
  * Urutan pengujian: jalankan skrip ini lebih dulu sebelum suite iterasi 3–5 —
  * skrip ini sekaligus pemanasan penjaga tenggat atas data benih, sehingga
@@ -464,9 +465,25 @@ ok(str_contains($r['body'], '&lt;script&gt;'), 'kueri berisi tag ditampilkan seb
 $r = $guest->get('/search?q=SOP');
 ok(str_contains($r['url'], '/login'), 'pengunjung pencarian global → dialihkan ke halaman masuk');
 
-/* ============================================ G. Pembersihan data uji & baseline === */
+/* ================================== G. Masukan review LPM 25 Nov (B1, B2) === */
 
-echo "\n=== G. Pembersihan data uji ===\n";
+echo "\n=== G. Masukan review LPM 25 Nov (B1, B2) ===\n";
+
+// B1 — unit pemilik ditampilkan sebagai peran: LPM, Waket 1–3 (foto-B1).
+$r = $admin->get('/documents/create');
+ok($r['code'] === 200, 'formulir unggah dokumen terbuka');
+ok(str_contains($r['body'], 'Waket 1') && str_contains($r['body'], 'Waket 2')
+    && str_contains($r['body'], 'Waket 3'), 'unit pemilik ditampilkan sebagai peran wakil ketua (B1)');
+ok(!preg_match('/>\s*Bidang (Akademik|Kemahasiswaan|Keuangan)/', $r['body']),
+    'nama bidang tidak lagi menjadi pilihan unit pemilik (B1)');
+
+// B2 — standar S9 Kerjasama tersedia pada pilihan standar (foto-B2).
+ok(str_contains($r['body'], 'S9 — Standar Kerjasama'),
+    'standar S9 Kerjasama tersedia pada pilihan standar (B2)');
+
+/* ============================================ H. Pembersihan data uji & baseline === */
+
+echo "\n=== H. Pembersihan data uji ===\n";
 
 $pdo->prepare("DELETE FROM notifications
                 WHERE (ref_table = 'documents'     AND ref_id IN (?, ?))

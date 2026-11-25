@@ -18,6 +18,10 @@ $standardName = static fn (int $id): string => $id > 0 && isset($standards[array
         pada jejak perubahan (FR-06).
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-center">
+    <?php // Review LPM 25 Nov (B5): pintasan kembali seperti pada Kelola Indikator Monev. ?>
+    <a class="btn btn-sm btn-outline-dark" href="<?= e(url('/ami')) ?>">
+        <i class="bi bi-arrow-left me-1"></i>Kembali ke dasbor
+    </a>
     <form method="get" action="<?= e(url('/ami/instruments')) ?>" class="d-flex gap-2">
         <select class="form-select form-select-sm" name="schedule_id">
             <?php foreach ($periods as $p): ?>

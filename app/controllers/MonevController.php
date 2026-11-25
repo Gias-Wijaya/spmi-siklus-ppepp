@@ -365,6 +365,9 @@ final class MonevController extends Controller
         }
         if ($data['target'] <= 0) {
             $errors['target'] = 'Target harus lebih besar dari 0.';
+        } elseif (trim((string)($data['unit_of_measure'] ?? '')) === '%' && $data['target'] > 100) {
+            // Review LPM 25 Nov (B4): target ber satuan % tidak boleh melebihi 100.
+            $errors['target'] = 'Target ber satuan % maksimal 100.';
         }
         if ($data['weight'] <= 0) {
             $errors['weight'] = 'Bobot harus lebih besar dari 0.';
@@ -438,12 +441,18 @@ final class MonevController extends Controller
         $rawValues  = is_array($_POST['values'] ?? null) ? $_POST['values'] : [];
         $rawNotes   = is_array($_POST['notes'] ?? null) ? $_POST['notes'] : [];
 
-        // Validasi nilai harus angka.
+        // Validasi nilai harus angka; satuan % maksimal 100 (review LPM 25 Nov — B4).
         foreach ($indicators as $indicator) {
             $indId = (int)$indicator['id'];
             $raw   = trim((string)($rawValues[$indId] ?? ''));
             if ($raw !== '' && !is_numeric($raw)) {
                 flash('danger', 'Nilai indikator ' . $indicator['code'] . ' harus berupa angka.');
+                $this->redirect('/monev/report?period_id=' . $periodId . '&unit_id=' . $unitId);
+            }
+            if ($raw !== ''
+                && trim((string)($indicator['unit_of_measure'] ?? '')) === '%'
+                && (float)$raw > 100) {
+                flash('danger', 'Nilai indikator ' . $indicator['code'] . ' ber satuan % maksimal 100.');
                 $this->redirect('/monev/report?period_id=' . $periodId . '&unit_id=' . $unitId);
             }
         }
