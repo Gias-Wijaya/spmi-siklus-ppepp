@@ -269,20 +269,21 @@ $r = $admin->post('/monev/indicators', [
 ]);
 ok(str_contains($r['body'], 'sudah dipakai'), 'kode indikator ganda ditolak');
 
-// Review LPM 25 Nov (B4): indikator baru ber satuan % dengan target > 100 ditolak.
+// Review LPM 25 Nov (B4 + lanjutan): target > 100 ditolak pada seluruh
+// satuan — termasuk saat satuan dikosongkan (celah satuan teks bebas).
 $r = $admin->post('/monev/indicators', [
     '_token'          => $admin->token(),
     'code'            => 'IND-B4',
-    'name'            => 'Target persen melebihi 100',
+    'name'            => 'Target melebihi 100',
     'standard_id'     => '1',
-    'unit_of_measure' => '%',
+    'unit_of_measure' => '',
     'target'          => '120',
     'weight'          => '1',
     'is_active'       => '1',
 ]);
-ok(str_contains($r['body'], 'maksimal 100'), 'target satuan % > 100 ditolak (B4)');
+ok(str_contains($r['body'], 'maksimal 100'), 'target 120 tanpa satuan ditolak (B4)');
 ok((int)val($pdo, 'SELECT COUNT(*) FROM monev_indicators WHERE code = ?', ['IND-B4']) === 0,
-    'indikator target 120% tidak tersimpan (B4)');
+    'indikator target 120 tidak tersimpan (B4)');
 
 echo "\n=== E. Isian capaian unit (FR-04) — Super Admin ===\n";
 $r = $admin->get('/monev/report?period_id=1&unit_id=1');

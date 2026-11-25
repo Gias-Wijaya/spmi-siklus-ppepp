@@ -353,9 +353,12 @@ final class MonevController extends Controller
         }
         if ($data['target'] <= 0) {
             $errors['target'] = 'Target harus lebih besar dari 0.';
-        } elseif (trim((string)($data['unit_of_measure'] ?? '')) === '%' && $data['target'] > 100) {
-            // Review LPM 25 Nov (B4): target ber satuan % tidak boleh melebihi 100.
-            $errors['target'] = 'Target ber satuan % maksimal 100.';
+        } elseif ($data['target'] > 100) {
+            // Review LPM 25 Nov (B4 + lanjutan): target indikator maksimal 100
+            // untuk seluruh satuan — kolom Target "Capaian per indikator" tidak
+            // boleh menampilkan angka di atas 100 (satuan teks bebas tidak
+            // lagi menjadi celah).
+            $errors['target'] = 'Target maksimal 100.';
         }
         if ($data['weight'] <= 0) {
             $errors['weight'] = 'Bobot harus lebih besar dari 0.';

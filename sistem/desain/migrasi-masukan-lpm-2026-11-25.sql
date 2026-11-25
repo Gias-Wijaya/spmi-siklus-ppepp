@@ -2,10 +2,11 @@
 -- MIGRASI — Masukan Review LPM (25 November 2026), foto-B2 & foto-B4:
 --            1. STANDAR S9 KERJASAMA — satu standar SPMI ditambahkan sehingga
 --               pilihan "Standar SPMI terkait" mencakup S1–S9.
---            2. BATAS SATUAN % — target dan nilai indikator ber satuan "%"
---               yang melebihi 100 diturunkan menjadi 100 (aturan baru pada
---               aplikasi: persentase tidak boleh melebihi 100); capaian dan
---               skor total dihitung ulang mengikuti rumus aplikasi
+--            2. BATAS TARGET & SATUAN % — target indikator (seluruh satuan)
+--               maksimal 100 dan nilai indikator ber satuan "%" maksimal 100,
+--               keduanya diturunkan menjadi 100 bila melebihi batas (aturan
+--               baru pada aplikasi); capaian dan skor total dihitung ulang
+--               mengikuti rumus aplikasi
 --               (achievement = value / target × 100, dibatasi 100).
 -- Untuk basis data LIVE yang sudah berisi data (tanpa impor ulang penuh).
 -- Jalankan sekali via phpMyAdmin / mysql CLI pada database `spmi_stikom`.
@@ -19,11 +20,10 @@ SELECT 'S9', 'Standar Kerjasama', 'Operasional'
   FROM DUAL
  WHERE NOT EXISTS (SELECT 1 FROM `standards` WHERE `code` = 'S9');
 
--- 2a) Target ber satuan % maksimal 100.
+-- 2a) Target indikator maksimal 100 (seluruh satuan).
 UPDATE `monev_indicators`
    SET `target` = 100
- WHERE `unit_of_measure` = '%'
-   AND `target` > 100;
+ WHERE `target` > 100;
 
 -- 2b) Nilai isian ber satuan % maksimal 100.
 UPDATE `monev_values` v

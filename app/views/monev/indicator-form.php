@@ -74,7 +74,7 @@ $err = static fn (string $field): string => isset($errors[$field]) ? ' is-invali
                         </div>
                         <div class="col-4 mb-3">
                             <label class="form-label">Target</label>
-                            <input type="number" step="any" min="0" name="target" class="form-control<?= $err('target') ?>" value="<?= e($indicator['target']) ?>">
+                            <input type="number" step="any" min="0" max="100" name="target" class="form-control<?= $err('target') ?>" value="<?= e($indicator['target']) ?>">
                         </div>
                         <div class="col-4 mb-3">
                             <label class="form-label">Bobot</label>
