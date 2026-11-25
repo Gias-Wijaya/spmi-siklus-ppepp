@@ -19,16 +19,7 @@ final class MonevController extends Controller
         $period = $periodId > 0 ? MonevPeriod::find($periodId) : null;
 
         $reports    = $period ? MonevReport::forPeriod($periodId) : [];
-
-        // Filter unit tabel "Capaian per indikator" (keputusan review LPM 19 Nov).
-        $units = Unit::active();
-        $filterUnitId = (int)($_GET['unit_id'] ?? 0);
-        if ($filterUnitId > 0 && !array_filter($units, static fn (array $u) => (int)$u['id'] === $filterUnitId)) {
-            $filterUnitId = 0;
-        }
-        $indicators = $period
-            ? MonevReport::indicatorAverages($periodId, $filterUnitId > 0 ? $filterUnitId : null)
-            : [];
+        $indicators = $period ? MonevReport::indicatorAverages($periodId) : [];
         $unitScores = $period ? MonevReport::unitScores($periodId) : [];
         $trend      = MonevReport::trendPerPeriod();
 
@@ -39,8 +30,8 @@ final class MonevController extends Controller
                 'SELECT COUNT(DISTINCT r.unit_id)
                    FROM monev_reports r
                    JOIN monev_values v ON v.report_id = r.id
-                  WHERE r.period_id = ?' . ($filterUnitId > 0 ? ' AND r.unit_id = ?' : ''),
-                $filterUnitId > 0 ? [(int)$period['id'], $filterUnitId] : [(int)$period['id']]
+                  WHERE r.period_id = ?',
+                [(int)$period['id']]
             );
         }
 
@@ -52,12 +43,11 @@ final class MonevController extends Controller
         $avg = $scored
             ? round(array_sum(array_map(static fn ($r) => (float)$r['total_score'], $scored)) / count($scored), 2)
             : null;
-        // "Di bawah target" pada kartu ringkasan tetap lintas seluruh unit
-        // — filter unit hanya berlaku untuk tabel Capaian per indikator.
-        $below = $period ? count(array_filter(
-            MonevReport::indicatorAverages($periodId),
+        // "Di bawah target" pada kartu ringkasan dari daftar capaian per indikator.
+        $below = count(array_filter(
+            $indicators,
             static fn ($i) => $i['avg_ap'] !== null && (float)$i['avg_ap'] < 100
-        )) : 0;
+        ));
 
         // Data grafik (Chart.js).
         $chartTrend = [
@@ -75,8 +65,6 @@ final class MonevController extends Controller
             'period'     => $period,
             'reports'    => $reports,
             'indicators' => $indicators,
-            'units'      => $units,
-            'filterUnitId' => $filterUnitId,
             'fillCount'  => $fillCount,
             'trend'      => $trend,
             'avg'        => $avg,

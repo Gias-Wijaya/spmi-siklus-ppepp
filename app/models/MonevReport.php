@@ -74,16 +74,11 @@ final class MonevReport extends Model
 
     /**
      * Rata-rata capaian per indikator pada satu periode + penanda di bawah target (FR-05).
-     * $unitId diisi → rerata diambil dari laporan satu unit DAN daftar indikator
-     * disaring ke unit pengisi tersebut — indikator "semua unit" tetap tampil,
-     * indikator unit lain tidak (filter tabel dasbor, review LPM 19 & 25 Nov).
+     * Filter unit pada tabel dasbor dihapus (masukan review LPM 25 Nov — tidak terpakai),
+     * sehingga selalu merangkum seluruh unit pengisi.
      */
-    public static function indicatorAverages(int $periodId, ?int $unitId = null): array
+    public static function indicatorAverages(int $periodId): array
     {
-        $unitSql = $unitId !== null ? ' AND r.unit_id = ?' : '';
-        $listSql = $unitId !== null ? ' AND (i.unit_id IS NULL OR i.unit_id = ?)' : '';
-        $params  = $unitId !== null ? [$periodId, $unitId, $unitId] : [$periodId];
-
         return Database::all(
             "SELECT i.id, i.code, i.name, i.unit_of_measure, i.target, i.weight,
                     ROUND(AVG(t.ap), 2) AS avg_ap,
@@ -93,12 +88,12 @@ final class MonevReport extends Model
                    SELECT v.indicator_id, v.achievement_percent AS ap, v.report_id
                      FROM monev_values v
                      JOIN monev_reports r ON r.id = v.report_id
-                    WHERE r.period_id = ?{$unitSql}
+                    WHERE r.period_id = ?
                ) t ON t.indicator_id = i.id
-              WHERE i.is_active = 1{$listSql}
+              WHERE i.is_active = 1
               GROUP BY i.id
               ORDER BY i.code ASC",
-            $params
+            [$periodId]
         );
     }
 

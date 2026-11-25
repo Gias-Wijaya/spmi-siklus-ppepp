@@ -167,7 +167,8 @@ ok($r['code'] === 200 && str_contains($r['body'], 'Dasbor Monev'), 'dasbor Monev
 ok(str_contains($r['body'], 'Tren rata-rata capaian antarperiode'), 'panel grafik tren tampil');
 ok(str_contains($r['body'], 'Kelola Indikator'), 'tombol "Kelola Indikator" permanen — tidak hanya saat indikator kosong (foto-13)');
 ok(str_contains($r['body'], 'Rata-rata ('), 'label "Rata-rata (n unit)" pada tabel capaian indikator (foto-07)');
-ok(str_contains($r['body'], 'Semua unit'), 'dropdown filter unit tersedia pada tabel capaian indikator (foto-07)');
+ok(!preg_match('/<select[^>]*name="unit_id"/', $r['body']),
+    'dropdown filter unit dihapus dari tabel capaian indikator (B3)');
 
 $r = $admin->get('/monev/periods');
 ok($r['code'] === 200 && str_contains($r['body'], 'Kelola Periode Monev'), 'halaman periode terbuka (Super Admin)');
@@ -381,8 +382,8 @@ ok(str_contains($r['body'], 'Monev 2026-1'), 'periode seed tampil pada pemilih p
 $r = $admin->getRaw('/monev/reports/' . $adminReport);
 ok(str_contains($r['headers'], 'Cache-Control: no-store'), 'halaman detail laporan memakai Cache-Control: no-store (foto-14)');
 $r = $admin->get('/monev?period_id=1&unit_id=2');
-ok(str_contains($r['body'], 'Rata-rata (0 unit)'),
-    'filter unit bekerja — unit yang belum mengisi menampilkan "Rata-rata (0 unit)" (foto-07)');
+ok(!str_contains($r['body'], 'Rata-rata (0 unit)'),
+    'parameter unit_id diabaikan — label "Rata-rata (n unit)" menghitung seluruh unit pengisi (B3)');
 
 echo "\n=== I. RBAC anggota (Waket I, unit 2) ===\n";
 $r = $member->post('/login', ['_token' => $member->token(), 'email' => 'waket1@stikomelrahma.ac.id', 'password' => 'waket123']);
@@ -519,18 +520,14 @@ ok(str_contains($r['body'], 'Unit pengisi') && str_contains($r['body'], 'Semua u
 $r = $admin->get("/monev/indicators/{$indU3}/edit");
 ok(str_contains($r['body'], 'value="3" selected'), 'form edit menampilkan unit pengisi terpilih');
 
-// Review LPM 25 Nov (B3): dropdown filter unit pada dasbor menyaring daftar
-// indikator — indikator unit lain tidak ikut tampil, indikator semua unit tetap ada.
+// Review LPM 25 Nov (B3): dropdown filter unit pada tabel "Capaian per indikator"
+// dihapus karena tidak terpakai — tabel selalu menampilkan seluruh indikator.
 $r = $admin->get('/monev?period_id=1');
-ok(str_contains($r['body'], 'IND-U2') && str_contains($r['body'], 'IND-U3'),
-    'tanpa filter, indikator seluruh unit tampil (B3)');
-$r = $admin->get('/monev?period_id=1&unit_id=2');
-ok(str_contains($r['body'], 'IND-U2') && !str_contains($r['body'], 'IND-U3'),
-    'filter unit 2 menampilkan indikator unit 2 saja (B3)');
-ok(str_contains($r['body'], 'M1.1'), 'indikator semua unit tetap tampil pada filter (B3)');
-$r = $admin->get('/monev?period_id=1&unit_id=3');
-ok(str_contains($r['body'], 'IND-U3') && !str_contains($r['body'], 'IND-U2'),
-    'filter unit 3 menampilkan indikator unit 3 saja (B3)');
+ok(str_contains($r['body'], 'IND-U2') && str_contains($r['body'], 'IND-U3')
+    && str_contains($r['body'], 'M1.1'),
+    'seluruh indikator (unit pengisi & semua unit) tampil tanpa filter (B3)');
+ok(!str_contains($r['body'], 'Semua unit'),
+    'pilihan "Semua unit" ikut hilang bersama dropdown filter (B3)');
 
 $r = $member->get('/monev/report?period_id=1&unit_id=2');
 ok($r['code'] === 200 && str_contains($r['body'], 'IND-U2'), 'indikator unit sendiri tampil pada isian anggota');

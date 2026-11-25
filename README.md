@@ -79,4 +79,4 @@ cd sistem/uji/iterasi-4-ami    ; php test-*.php
 cd sistem/uji/iterasi-5-followup ; php test-*.php
 ```
 
-Total regresi: **510/510 pemeriksaan lulus** (25 Nov 2026 — sebelumnya 495/495, 458/458, 383/383).
+Total regresi: **508/508 pemeriksaan lulus** (25 Nov 2026 — sebelumnya 495/495, 458/458, 383/383).
